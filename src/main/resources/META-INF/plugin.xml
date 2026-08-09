@@ -1,12 +1,23 @@
 <idea-plugin>
     <id>com.github.cgl.sql-heading-folding</id>
     <name>SQL Heading Folding</name>
-    <vendor>cgl</vendor>
+    <vendor url="https://github.com/yc-2018">yc-2018 (仰晨)</vendor>
 
     <description><![CDATA[
-        Adds hierarchical, comment-based headings, folding, and navigation to SQL consoles.
-        Use <code>-- #</code> through <code>-- #####</code> to define heading levels.
+        <p>Adds hierarchical comment headings, native code folding, reading-mode labels, and outline navigation to SQL consoles.</p>
+        <p>Use <code>-- #</code> through <code>-- #####</code> to organize long SQL scripts in any JetBrains IDE that provides Database Tools and SQL, including IntelliJ IDEA Ultimate and DataGrip.</p>
+        <p>适用于所有提供 Database Tools and SQL 的 JetBrains IDE（包括 IntelliJ IDEA Ultimate 和 DataGrip），为 SQL 控制台提供分级注释标题、原生代码折叠、阅读态标签与目录导航。</p>
     ]]></description>
+
+    <change-notes><![CDATA[
+        <h3>0.1.6</h3>
+        <ul>
+            <li>Open compatibility for IntelliJ Platform 2023.2 and later.</li>
+            <li>Support every JetBrains IDE that provides Database Tools and SQL, including IntelliJ IDEA Ultimate and DataGrip.</li>
+            <li>Improve bilingual documentation and Marketplace metadata.</li>
+        </ul>
+        <p>开放 IntelliJ Platform 2023.2 及后续版本兼容范围，支持所有提供 Database Tools and SQL 的 JetBrains IDE，并完善中英文发布说明。</p>
+    ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.database</depends>

@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.github.cgl"
-version = "0.1.5"
+version = "0.1.6"
 
 repositories {
     mavenCentral()
@@ -39,7 +39,7 @@ intellijPlatform {
 
         ideaVersion {
             sinceBuild = "232"
-            untilBuild = "233.*"
+            untilBuild = provider { null }
         }
     }
 }

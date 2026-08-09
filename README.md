@@ -1,45 +1,110 @@
 # SQL Heading Folding
 
-IntelliJ IDEA SQL 控制台的分级标题、代码折叠和目录导航插件。
+[![Build and release](https://github.com/yc-2018/intellij-sql-heading-folding/actions/workflows/build-release.yml/badge.svg)](https://github.com/yc-2018/intellij-sql-heading-folding/actions/workflows/build-release.yml)
+[![Continuous release](https://img.shields.io/github/v/release/yc-2018/intellij-sql-heading-folding?include_prereleases&label=download)](https://github.com/yc-2018/intellij-sql-heading-folding/releases/tag/continuous)
 
-## 用法
+Hierarchical headings, native folding, reading-mode labels, and outline navigation for SQL consoles in every JetBrains IDE that provides Database Tools and SQL.
 
-在 SQL 控制台或 `.sql` 文件中，用一到五个 `#` 编写标题：
+为所有提供 Database Tools and SQL 的 JetBrains IDE 提供 SQL 分级标题、原生折叠、阅读态标签和目录导航。
+
+## Features / 功能
+
+- Define five heading levels with `-- #` through `-- #####`. / 使用 `-- #` 到 `-- #####` 定义五级标题。
+- Fold each section with the native editor gutter control. / 使用编辑器左侧原生控件折叠整个标题区块。
+- Show compact `H1` to `H5` labels and bold titles when the caret leaves a heading line. / 光标离开标题行后显示紧凑的 `H1` 到 `H5` 标签并加粗标题。
+- Restore the original SQL comment as soon as the caret returns to the heading line. / 光标返回标题行时立即恢复原始 SQL 注释，方便编辑。
+- Navigate all headings from the **SQL Headings** tool window. / 在 **SQL Headings** 工具窗口中浏览并跳转全部标题。
+- Refresh, collapse all sections, or expand all sections from the tool window toolbar. / 支持刷新、全部折叠和全部展开。
+
+## Usage / 使用方法
+
+Write headings in a SQL console or `.sql` file:
+
+在 SQL 控制台或 `.sql` 文件中编写标题：
 
 ```sql
--- # 用户分析
+-- # User analysis / 用户分析
 select * from users;
 
--- ## 活跃用户
+-- ## Active users / 活跃用户
 select * from users where active = true;
 
--- # 订单分析
+-- # Order analysis / 订单分析
 select * from orders;
 ```
 
-- 标题行左侧会出现 IDEA 原生折叠控件。
-- 光标不在标题行时会用紧凑的 `H1` 到 `H5` 标签替代 `-- #` 标记并加粗标题；光标返回该行时恢复完整注释，方便编辑。
-- 一级标题折叠到下一个一级标题之前；二级标题折叠到下一个一级或二级标题之前，其余层级同理。
-- 打开右侧 **SQL Headings** 工具窗口可查看完整目录。
-- 单击目录标题会展开遮挡该标题的区块，并将编辑器定位到标题行。
-- 工具窗口顶部可刷新、全部折叠或全部展开标题区块。
+Section boundaries follow heading levels. An `H2` section ends at the next `H1` or `H2`; an `H1` section ends at the next `H1`.
 
-## 构建
+区块边界遵循标题层级：二级标题在下一个一级或二级标题前结束，一级标题在下一个一级标题前结束。
 
-项目面向 IntelliJ IDEA Ultimate 2023.2-2023.3。安装插件的用户不需要单独安装 JDK，插件运行时使用 IDEA 自带的 JetBrains Runtime。
+## Compatibility / 兼容性
 
-只有从源码构建插件时才需要 JDK 17。请将 `JAVA_HOME` 指向任意可用的 JDK 17，或者在 IDEA 的 Gradle 设置中将 Gradle JVM 选择为 JDK 17。项目不包含任何开发者电脑上的绝对 JDK 路径。
+| Product / 产品 | Supported versions / 支持版本 | Notes / 说明 |
+| --- | --- | --- |
+| IntelliJ IDEA Ultimate | 2023.2 and later / 2023.2 及后续版本 | Primary target; Database Tools is bundled / 重点测试产品，已内置 Database Tools |
+| DataGrip | 2023.2 and later / 2023.2 及后续版本 | Primary target; Database Tools is bundled / 重点测试产品，已内置数据库功能 |
+| Other JetBrains IDEs / 其他 JetBrains IDE | 2023.2 and later / 2023.2 及后续版本 | Supported whenever the product provides `com.intellij.database`; Marketplace exposes all eligible products automatically / 只要产品提供该依赖就支持，Marketplace 会自动覆盖全部符合条件的产品 |
+| Products without Database Tools / 不含数据库工具的产品 | Not available / 不可用 | The required `com.intellij.database` plugin is missing / 缺少必需依赖 |
 
-构建插件：
+The plugin declares build `232` as its minimum and intentionally has no upper build limit. New IDE releases should still be tested before being marked as verified on JetBrains Marketplace.
+
+插件最低版本为 build `232`，不设置最高版本限制。新的 IDE 大版本仍应在 JetBrains Marketplace 标记为已验证前进行实际测试。
+
+## Installation / 安装
+
+### JetBrains Marketplace
+
+After Marketplace approval, open **Settings > Plugins > Marketplace**, search for **SQL Heading Folding**, and select **Install**.
+
+Marketplace 审核通过后，打开 **Settings > Plugins > Marketplace**，搜索 **SQL Heading Folding** 并安装。
+
+### Install from disk / 从磁盘安装
+
+Download the latest ZIP from the [continuous release](https://github.com/yc-2018/intellij-sql-heading-folding/releases/tag/continuous), then open **Settings > Plugins > Install Plugin from Disk**.
+
+从 [continuous release](https://github.com/yc-2018/intellij-sql-heading-folding/releases/tag/continuous) 下载最新 ZIP，再通过 **Settings > Plugins > Install Plugin from Disk** 安装。
+
+## Build / 构建
+
+Building from source requires JDK 17. Installing the plugin does not require a separate JDK because JetBrains IDEs use their bundled runtime.
+
+源码构建需要 JDK 17。普通用户安装插件不需要额外安装 JDK，插件使用 JetBrains IDE 自带运行时。
 
 ```powershell
-.\gradlew.bat buildPlugin
+.\gradlew.bat test buildPlugin
 ```
 
-插件 ZIP 会生成在 `build/distributions/`。在 IDEA 中打开 **Settings > Plugins > 齿轮 > Install Plugin from Disk**，选择该 ZIP 安装。
+The plugin ZIP is generated under `build/distributions/`.
 
-启动独立的 IDEA 测试环境：
+插件 ZIP 生成在 `build/distributions/`。
+
+## Development / 开发
+
+- Kotlin 1.9 and JVM 17
+- IntelliJ Platform Gradle Plugin 2.x
+- Minimum platform build: `232`
+- Plugin ID: `com.github.cgl.sql-heading-folding`
+- Required runtime plugin: `com.intellij.database` (Marketplace uses this dependency to determine compatible JetBrains products)
+
+Run an isolated IDE sandbox with:
+
+使用独立 IDE 沙盒运行：
 
 ```powershell
 .\gradlew.bat runIde
 ```
+
+## Release / 发布
+
+Every push to `main` runs tests, builds the plugin, uploads an Actions artifact, and refreshes the `continuous` prerelease. Pushing a `v*` tag creates a versioned GitHub Release.
+
+每次推送到 `main` 都会运行测试、构建插件并刷新 `continuous` 预发行版；推送 `v*` 标签会创建正式 GitHub Release。
+
+```powershell
+git tag v0.1.6
+git push origin v0.1.6
+```
+
+## Source / 源码
+
+[github.com/yc-2018/intellij-sql-heading-folding](https://github.com/yc-2018/intellij-sql-heading-folding)
