@@ -7,6 +7,7 @@ import com.intellij.codeInsight.folding.CodeFoldingManager
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.editor.event.DocumentEvent
@@ -44,7 +45,9 @@ private class SqlHeadingPresentationController(
 ) : Disposable, CaretListener, DocumentListener {
     private val alarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val titleHighlighters = mutableListOf<RangeHighlighter>()
+    private val levelInlays = mutableListOf<Inlay<*>>()
     private var needsFoldingUpdate = true
+    private var lastActiveLine: Int? = null
 
     init {
         editor.caretModel.addCaretListener(this, this)
@@ -54,10 +57,13 @@ private class SqlHeadingPresentationController(
 
     override fun dispose() {
         alarm.cancelAllRequests()
-        clearTitleHighlighters()
+        clearPresentation()
     }
 
-    override fun caretPositionChanged(event: CaretEvent) = scheduleRefresh(0, false)
+    override fun caretPositionChanged(event: CaretEvent) {
+        val activeLine = editor.document.getLineNumber(editor.caretModel.offset)
+        if (activeLine != lastActiveLine) scheduleRefresh(0, false)
+    }
 
     override fun documentChanged(event: DocumentEvent) {
         needsFoldingUpdate = true
@@ -74,7 +80,8 @@ private class SqlHeadingPresentationController(
         if (editor.isDisposed) return
 
         val headings = readSqlHeadings() ?: run {
-            clearTitleHighlighters()
+            clearPresentation()
+            lastActiveLine = null
             return
         }
 
@@ -84,6 +91,7 @@ private class SqlHeadingPresentationController(
         }
 
         val activeLine = editor.document.getLineNumber(editor.caretModel.offset)
+        lastActiveLine = activeLine
         editor.foldingModel.runBatchFoldingOperation {
             editor.foldingModel.allFoldRegions.forEach { region ->
                 val heading = headings.firstOrNull { candidate ->
@@ -94,12 +102,18 @@ private class SqlHeadingPresentationController(
             }
         }
 
-        clearTitleHighlighters()
+        clearPresentation()
         val attributes = TextAttributes().apply { fontType = Font.BOLD }
         headings.filter { heading ->
             editor.document.getLineNumber(heading.offset) != activeLine &&
                 heading.titleStartOffset < heading.titleEndOffset
         }.forEach { heading ->
+            editor.inlayModel.addInlineElement(
+                heading.titleStartOffset,
+                false,
+                SqlHeadingLevelRenderer(heading.level),
+            )?.let(levelInlays::add)
+
             titleHighlighters += editor.markupModel.addRangeHighlighter(
                 heading.titleStartOffset,
                 heading.titleEndOffset,
@@ -121,5 +135,13 @@ private class SqlHeadingPresentationController(
             if (highlighter.isValid) editor.markupModel.removeHighlighter(highlighter)
         }
         titleHighlighters.clear()
+    }
+
+    private fun clearPresentation() {
+        clearTitleHighlighters()
+        levelInlays.toList().forEach { inlay ->
+            if (inlay.isValid) inlay.dispose()
+        }
+        levelInlays.clear()
     }
 }
