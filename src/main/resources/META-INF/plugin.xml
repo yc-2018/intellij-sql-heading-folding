@@ -12,6 +12,9 @@
     <depends>com.intellij.database</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <editorFactoryListener
+                implementation="com.github.cgl.sqlheadings.editor.SqlHeadingPresentationListener"/>
+
         <lang.foldingBuilder
                 language="SQL"
                 implementationClass="com.github.cgl.sqlheadings.folding.SqlHeadingFoldingBuilder"/>

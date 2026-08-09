@@ -20,12 +20,18 @@ internal object SqlHeadingParser {
 
         return matches.mapIndexed { index, match ->
             val level = match.groupValues[1].length
+            val lineEnd = headingLineEnd(source, match.range.first)
+            val titleRange = match.groups[2]?.range
+            val markerStart = source.indexOf("--", match.range.first).coerceAtLeast(match.range.first)
 
             SqlHeading(
                 level = level,
                 title = match.groups[2]?.value?.trim().orEmpty(),
                 offset = match.range.first,
-                foldStartOffset = headingLineEnd(source, match.range.first),
+                markerStartOffset = markerStart,
+                titleStartOffset = titleRange?.first ?: lineEnd,
+                titleEndOffset = titleRange?.last?.plus(1) ?: lineEnd,
+                foldStartOffset = lineEnd,
                 contentStartOffset = contentStart(source, match.range.first),
                 sectionEndOffset = sectionEnd(source, boundaries[index]),
             )

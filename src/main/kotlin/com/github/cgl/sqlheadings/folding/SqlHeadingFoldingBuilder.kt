@@ -7,25 +7,41 @@ import com.intellij.lang.folding.FoldingDescriptor
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import java.util.Collections
 
 internal class SqlHeadingFoldingBuilder : FoldingBuilderEx() {
     override fun buildFoldRegions(
         root: PsiElement,
         document: Document,
         quick: Boolean,
-    ): Array<FoldingDescriptor> = SqlHeadingParser.parse(document.charsSequence)
-        .asSequence()
-        .filter { heading -> heading.foldStartOffset < heading.sectionEndOffset }
-        .map { heading ->
-            FoldingDescriptor(
-                root.node,
-                TextRange(heading.foldStartOffset, heading.sectionEndOffset),
-                null,
-                "...",
-            )
+    ): Array<FoldingDescriptor> {
+        val descriptors = mutableListOf<FoldingDescriptor>()
+
+        SqlHeadingParser.parse(document.charsSequence).forEach { heading ->
+            if (heading.titleStartOffset < heading.titleEndOffset) {
+                descriptors += FoldingDescriptor(
+                    root.node,
+                    TextRange(heading.markerStartOffset, heading.titleStartOffset),
+                    null,
+                    Collections.emptySet(),
+                    false,
+                    "",
+                    true,
+                )
+            }
+
+            if (heading.foldStartOffset < heading.sectionEndOffset) {
+                descriptors += FoldingDescriptor(
+                    root.node,
+                    TextRange(heading.foldStartOffset, heading.sectionEndOffset),
+                    null,
+                    "...",
+                )
+            }
         }
-        .toList()
-        .toTypedArray()
+
+        return descriptors.toTypedArray()
+    }
 
     override fun getPlaceholderText(node: ASTNode): String = "..."
 

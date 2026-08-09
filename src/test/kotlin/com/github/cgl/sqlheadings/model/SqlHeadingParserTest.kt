@@ -15,6 +15,9 @@ class SqlHeadingParserTest {
         assertEquals(listOf(1, 2, 3, 4, 5), headings.map { it.level })
         assertEquals((1..5).map { "Heading $it" }, headings.map { it.title })
         assertEquals(text.indexOf('\n'), headings.first().foldStartOffset)
+        assertEquals(text.indexOf("--"), headings.first().markerStartOffset)
+        assertEquals(text.indexOf("Heading 1"), headings.first().titleStartOffset)
+        assertEquals(text.indexOf("Heading 1") + "Heading 1".length, headings.first().titleEndOffset)
     }
 
     @Test
