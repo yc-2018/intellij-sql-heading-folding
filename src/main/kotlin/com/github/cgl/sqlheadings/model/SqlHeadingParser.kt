@@ -29,6 +29,7 @@ internal object SqlHeadingParser {
                 title = match.groups[2]?.value?.trim().orEmpty(),
                 offset = match.range.first,
                 markerStartOffset = markerStart,
+                labelFoldEndOffset = ((titleRange?.first ?: lineEnd) - 1).coerceAtLeast(markerStart),
                 titleStartOffset = titleRange?.first ?: lineEnd,
                 titleEndOffset = titleRange?.last?.plus(1) ?: lineEnd,
                 foldStartOffset = lineEnd,

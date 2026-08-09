@@ -5,6 +5,7 @@ internal data class SqlHeading(
     val title: String,
     val offset: Int,
     val markerStartOffset: Int,
+    val labelFoldEndOffset: Int,
     val titleStartOffset: Int,
     val titleEndOffset: Int,
     val foldStartOffset: Int,

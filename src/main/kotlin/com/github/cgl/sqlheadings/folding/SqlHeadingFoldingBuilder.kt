@@ -21,11 +21,11 @@ internal class SqlHeadingFoldingBuilder : FoldingBuilderEx() {
             if (heading.titleStartOffset < heading.titleEndOffset) {
                 descriptors += FoldingDescriptor(
                     root.node,
-                    TextRange(heading.markerStartOffset, heading.titleStartOffset),
+                    TextRange(heading.markerStartOffset, heading.labelFoldEndOffset),
                     null,
                     Collections.emptySet(),
                     false,
-                    "",
+                    "H${heading.level}",
                     true,
                 )
             }

@@ -17,6 +17,7 @@ class SqlHeadingParserTest {
         assertEquals(text.indexOf('\n'), headings.first().foldStartOffset)
         assertEquals(text.indexOf("--"), headings.first().markerStartOffset)
         assertEquals(text.indexOf("Heading 1"), headings.first().titleStartOffset)
+        assertEquals(text.indexOf("Heading 1") - 1, headings.first().labelFoldEndOffset)
         assertEquals(text.indexOf("Heading 1") + "Heading 1".length, headings.first().titleEndOffset)
     }
 
