@@ -1,0 +1,25 @@
+<idea-plugin>
+    <id>com.github.cgl.sql-heading-folding</id>
+    <name>SQL Heading Folding</name>
+    <vendor>cgl</vendor>
+
+    <description><![CDATA[
+        Adds hierarchical, comment-based headings, folding, and navigation to SQL consoles.
+        Use <code>-- #</code> through <code>-- #####</code> to define heading levels.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.database</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <lang.foldingBuilder
+                language="SQL"
+                implementationClass="com.github.cgl.sqlheadings.folding.SqlHeadingFoldingBuilder"/>
+
+        <toolWindow
+                id="SQL Headings"
+                anchor="right"
+                icon="/icons/sqlHeadings.svg"
+                factoryClass="com.github.cgl.sqlheadings.toolwindow.SqlHeadingsToolWindowFactory"/>
+    </extensions>
+</idea-plugin>
