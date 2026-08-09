@@ -25,7 +25,7 @@ internal class SqlHeadingFoldingBuilder : FoldingBuilderEx() {
                     null,
                     Collections.emptySet(),
                     false,
-                    "",
+                    "${"  ".repeat(heading.level - 1)}H${heading.level}  ",
                     true,
                 )
             }
