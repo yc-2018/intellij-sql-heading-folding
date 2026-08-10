@@ -96,13 +96,13 @@ Run an isolated IDE sandbox with:
 
 ## Release / 发布
 
-Every push to `main` runs tests, builds the plugin, uploads an Actions artifact, and refreshes the `continuous` prerelease. Pushing a `v*` tag creates a versioned GitHub Release.
+Every push to `main` runs tests, builds the plugin, uploads an Actions artifact, and refreshes the `continuous` prerelease. Pushing a `v*` tag publishes the plugin to JetBrains Marketplace and creates a versioned GitHub Release. Before the first tagged release, add the Marketplace permanent token as the `JETBRAINS_MARKETPLACE_TOKEN` Actions secret under `Settings > Secrets and variables > Actions`.
 
-每次推送到 `main` 都会运行测试、构建插件并刷新 `continuous` 预发行版；推送 `v*` 标签会创建正式 GitHub Release。
+每次推送到 `main` 都会运行测试、构建插件并刷新 `continuous` 预发行版；推送 `v*` 标签会将插件发布到 JetBrains Marketplace，并创建正式 GitHub Release。首次发布前，请在 GitHub 仓库的 `Settings > Secrets and variables > Actions` 中，将 Marketplace 永久 Token 添加为名为 `JETBRAINS_MARKETPLACE_TOKEN` 的 Actions Secret。
 
 ```powershell
-git tag v0.1.7
-git push origin v0.1.7
+git tag v0.1.8
+git push origin v0.1.8
 ```
 
 ## Source / 源码

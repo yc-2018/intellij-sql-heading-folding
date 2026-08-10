@@ -10,12 +10,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>0.1.7</h3>
+        <h3>0.1.8</h3>
         <ul>
-            <li>Introduce a new hierarchical document and folding icon.</li>
-            <li>Improve icon clarity on both light and dark IDE themes.</li>
+            <li>Refine the SQL Headings tool window icon for a cleaner IntelliJ-style appearance.</li>
+            <li>Use a compact monochrome hierarchy mark that remains legible in selected and unselected states.</li>
         </ul>
-        <p>采用新的层级文档与折叠图标，并提升图标在浅色和深色 IDE 主题下的清晰度。</p>
+        <p>优化 SQL Headings 工具窗口图标，采用更简洁的单色层级标记，在选中和未选中状态下都保持清晰。</p>
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>

@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.github.cgl"
-version = "0.1.7"
+version = "0.1.8"
 
 repositories {
     mavenCentral()
@@ -41,5 +41,9 @@ intellijPlatform {
             sinceBuild = "232"
             untilBuild = provider { null }
         }
+    }
+
+    publishing {
+        token = providers.environmentVariable("JETBRAINS_MARKETPLACE_TOKEN")
     }
 }
