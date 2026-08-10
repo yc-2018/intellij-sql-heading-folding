@@ -1,68 +1,68 @@
-# Repository Guidelines
+# 仓库指南
 
-## Scope
+## 范围
 
-This repository contains an IntelliJ Platform plugin that adds hierarchical headings, folding, reading-mode labels, and outline navigation to SQL consoles and SQL files.
+本仓库包含一个 IntelliJ Platform 插件，为 SQL 控制台和 SQL 文件提供层级标题、折叠、阅读模式标签和大纲导航功能。
 
-Primary verification targets are IntelliJ IDEA Ultimate and DataGrip. Keep the plugin available to every JetBrains IDE that provides `com.intellij.database`; Marketplace determines product availability from that dependency. Do not introduce dependencies on Java-specific IDEA modules or unnecessarily narrow product compatibility.
+主要验证目标为 IntelliJ IDEA Ultimate 和 DataGrip。插件应兼容所有提供 `com.intellij.database` 的 JetBrains IDE；Marketplace 根据此依赖确定适用产品。不得引入依赖 Java 专用 IDEA 模块的依赖，也不要无必要地缩小产品兼容范围。
 
-## Toolchain
+## 工具链
 
-- Use JDK 17 for Gradle and compilation.
-- Use the checked-in Gradle Wrapper. Do not require a globally installed Gradle.
-- Keep JVM bytecode at version 17.
-- The minimum IntelliJ Platform build is `232` (2023.2).
-- Keep the upper platform build unrestricted unless a verified incompatibility requires a temporary cap.
-- Do not add developer-machine JDK paths or other absolute local paths.
+- Gradle 和编译使用 JDK 17。
+- 使用仓库中已提交的 Gradle Wrapper，不要求全局安装 Gradle。
+- JVM 字节码版本保持为 17。
+- 最低 IntelliJ Platform build 为 `232`（2023.2）。
+- 除非已验证的不兼容问题需要临时限制，否则不设置平台最高 build 限制。
+- 不要添加开发者机器的 JDK 路径或其他绝对本地路径。
 
-## Architecture
+## 架构
 
-- `model/`: heading data and the pure text parser.
-- `folding/`: IntelliJ folding descriptors for heading labels and SQL sections.
-- `editor/`: caret-aware reading-mode presentation.
-- `toolwindow/`: heading outline, navigation, and bulk folding controls.
-- `src/main/resources/META-INF/plugin.xml`: plugin metadata, dependencies, and extension registrations.
+- `model/`：标题数据和纯文本解析器。
+- `folding/`：用于标题标签和 SQL 区段的 IntelliJ 折叠描述符。
+- `editor/`：感知光标位置的阅读模式展示。
+- `toolwindow/`：标题大纲、导航和批量折叠控制。
+- `src/main/resources/META-INF/plugin.xml`：插件元数据、依赖和扩展注册。
 
-Keep parsing independent from IntelliJ APIs where possible. UI and editor integrations may consume parser results but should not duplicate heading syntax rules.
+尽可能保持解析逻辑独立于 IntelliJ API。UI 和编辑器集成可以使用解析结果，但不得重复实现标题语法规则。
 
-## Heading Contract
+## 标题约定
 
-- Recognize only full-line SQL comments in the form `-- # Title` through `-- ##### Title`.
-- Preserve the document text. Reading mode must be visual only.
-- A section ends at the next heading with the same or a higher level.
-- Keep the section folding marker on the heading line.
-- When the caret is outside a heading line, show a compact `H1` to `H5` label and bold title.
-- When the caret enters a heading line, restore the original comment presentation.
-- Do not let reading-mode label backgrounds include indentation or padding spaces.
+- 仅识别形如 `-- # 标题` 至 `-- ##### 标题` 的完整行 SQL 注释。
+- 保留文档原始文本；阅读模式只能进行视觉展示。
+- 一个区段在遇到下一个同级或更高级标题时结束。
+- 区段折叠标记保留在标题行。
+- 当光标不在标题行时，显示紧凑的 `H1` 至 `H5` 标签和加粗标题。
+- 当光标进入标题行时，恢复原始注释展示。
+- 阅读模式标签的背景不得包含缩进或填充空格。
 
-## Coding Style
+## 编码风格
 
-- Follow existing Kotlin style and IntelliJ Platform APIs.
-- Prefer small, focused classes and pure parser functions.
-- Keep comments succinct and only for non-obvious behavior.
-- Preserve theme compatibility. Avoid hard-coded editor foreground or background colors.
-- Dispose listeners, alarms, highlighters, and editor resources correctly.
-- Avoid work on every caret offset change when a line-level update is sufficient.
+- 遵循现有 Kotlin 风格和 IntelliJ Platform API。
+- 优先使用小而聚焦的类和纯解析函数。
+- 注释保持简洁，仅解释不明显的行为。
+- 保持主题兼容性，避免硬编码编辑器前景色或背景色。
+- 正确释放监听器、Alarm、高亮器和编辑器资源。
+- 当按行更新已足够时，避免在每次光标偏移变化时执行工作。
 
-## Verification
+## 验证
 
-Run before committing behavior changes:
+提交行为变更前运行：
 
 ```powershell
 .\gradlew.bat test buildPlugin
 ```
 
-Parser behavior changes require focused unit tests in `SqlHeadingParserTest`.
+解析器行为变更需要在 `SqlHeadingParserTest` 中添加有针对性的单元测试。
 
-For compatibility changes, test the packaged ZIP in both IntelliJ IDEA Ultimate and DataGrip, then sample other JetBrains IDEs that bundle Database Tools when practical. Use JetBrains Plugin Verifier for representative IDE releases before Marketplace publication.
+兼容性变更时，应在 IntelliJ IDEA Ultimate 和 DataGrip 中测试打包 ZIP；条件允许时，再抽样测试其他内置 Database Tools 的 JetBrains IDE。在发布到 Marketplace 前，使用 JetBrains Plugin Verifier 验证有代表性的 IDE 版本。
 
-The Community test sandbox does not bundle `com.intellij.database`; its missing-plugin warning during searchable-options generation is expected and must not be confused with a compilation or unit-test failure.
+Community 测试沙箱不包含 `com.intellij.database`；在生成 searchable options 时出现缺少插件的警告属于预期现象，不能误判为编译或单元测试失败。
 
-## Documentation And Releases
+## 文档与发布
 
-- Keep README content bilingual in English and Simplified Chinese.
-- Update Marketplace metadata and change notes for user-visible releases.
-- Bump the plugin version for every distributable behavior change.
-- Pushes to `main` refresh the `continuous` prerelease.
-- Version tags matching `v*` create immutable GitHub Releases.
-- Never commit `.gradle/`, `.intellijPlatform/`, `.idea/`, `build/`, or local credentials.
+- README 内容保持中英文双语。
+- 面向用户的发布需要更新 Marketplace 元数据和变更说明。
+- 每次可分发的行为变更都要提升插件版本。
+- 推送到 `main` 会刷新 `continuous` 预发行版。
+- 符合 `v*` 的版本标签会创建不可变的 GitHub Release。
+- 不得提交 `.gradle/`、`.intellijPlatform/`、`.idea/`、`build/` 或本地凭据。

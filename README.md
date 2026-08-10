@@ -101,8 +101,8 @@ Every push to `main` runs tests, builds the plugin, uploads an Actions artifact,
 每次推送到 `main` 都会运行测试、构建插件并刷新 `continuous` 预发行版；推送 `v*` 标签会创建正式 GitHub Release。
 
 ```powershell
-git tag v0.1.6
-git push origin v0.1.6
+git tag v0.1.7
+git push origin v0.1.7
 ```
 
 ## Source / 源码

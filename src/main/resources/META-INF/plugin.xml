@@ -10,13 +10,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>0.1.6</h3>
+        <h3>0.1.7</h3>
         <ul>
-            <li>Open compatibility for IntelliJ Platform 2023.2 and later.</li>
-            <li>Support every JetBrains IDE that provides Database Tools and SQL, including IntelliJ IDEA Ultimate and DataGrip.</li>
-            <li>Improve bilingual documentation and Marketplace metadata.</li>
+            <li>Introduce a new hierarchical document and folding icon.</li>
+            <li>Improve icon clarity on both light and dark IDE themes.</li>
         </ul>
-        <p>开放 IntelliJ Platform 2023.2 及后续版本兼容范围，支持所有提供 Database Tools and SQL 的 JetBrains IDE，并完善中英文发布说明。</p>
+        <p>采用新的层级文档与折叠图标，并提升图标在浅色和深色 IDE 主题下的清晰度。</p>
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
