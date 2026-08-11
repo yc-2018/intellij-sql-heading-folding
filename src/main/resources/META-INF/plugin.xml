@@ -10,12 +10,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>0.1.8</h3>
+        <h3>0.1.9</h3>
         <ul>
             <li>Refine the SQL Headings tool window icon for a cleaner IntelliJ-style appearance.</li>
-            <li>Use a compact monochrome hierarchy mark that remains legible in selected and unselected states.</li>
+            <li>Use theme-specific light and dark icon variants for clear selected and unselected states.</li>
         </ul>
-        <p>优化 SQL Headings 工具窗口图标，采用更简洁的单色层级标记，在选中和未选中状态下都保持清晰。</p>
+        <p>优化 SQL Headings 工具窗口图标，针对浅色和深色主题提供不同图标，在选中和未选中状态下都保持清晰。</p>
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
