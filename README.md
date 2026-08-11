@@ -13,6 +13,7 @@ Hierarchical headings, native folding, reading-mode labels, and outline navigati
 - Fold each section with the native editor gutter control. / 使用编辑器左侧原生控件折叠整个标题区块。
 - Show compact `H1` to `H5` labels and bold titles when the caret leaves a heading line. / 光标离开标题行后显示紧凑的 `H1` 到 `H5` 标签并加粗标题。
 - Restore the original SQL comment as soon as the caret returns to the heading line. / 光标返回标题行时立即恢复原始 SQL 注释，方便编辑。
+- Color comments with `r/y/b/g/c/o/p/m` for red, yellow, blue, green, cyan, orange, purple, or magenta; use `-- @@` for bold and combine both as `-- @@r`. / 使用 `r/y/b/g/c/o/p/m` 设置红、黄、蓝、绿、青、橙、紫、品红；使用 `-- @@` 加粗，也可组合为 `-- @@r`。
 - Navigate all headings from the **SQL Headings** tool window. / 在 **SQL Headings** 工具窗口中浏览并跳转全部标题。
 - Refresh, collapse all sections, or expand all sections from the tool window toolbar. / 支持刷新、全部折叠和全部展开。
 
@@ -31,6 +32,12 @@ select * from users where active = true;
 
 -- # Order analysis / 订单分析
 select * from orders;
+
+-- @r Red note / 红色说明
+-- @@ Bold note / 加粗说明
+-- @@g Bold green note / 加粗绿色说明
+-- @c Cyan note / 青色说明
+-- @@p Bold purple note / 加粗紫色说明
 ```
 
 Section boundaries follow heading levels. An `H2` section ends at the next `H1` or `H2`; an `H1` section ends at the next `H1`.
@@ -101,8 +108,8 @@ Every push to `main` runs tests, builds the plugin, uploads an Actions artifact,
 每次推送到 `main` 都会运行测试、构建插件并刷新 `continuous` 预发行版；推送 `v*` 标签会将插件发布到 JetBrains Marketplace，并创建正式 GitHub Release。首次发布前，请在 GitHub 仓库的 `Settings > Secrets and variables > Actions` 中，将 Marketplace 永久 Token 添加为名为 `JETBRAINS_MARKETPLACE_TOKEN` 的 Actions Secret。
 
 ```powershell
-git tag v0.1.9
-git push origin v0.1.9
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 ## Source / 源码

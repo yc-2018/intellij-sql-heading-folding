@@ -20,6 +20,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.util.Alarm
 import com.intellij.ui.ColoredTreeCellRenderer
@@ -94,7 +95,7 @@ internal class SqlHeadingsPanel(
                 hasFocus: Boolean,
             ) {
                 val heading = (value as? DefaultMutableTreeNode)?.userObject as? SqlHeading ?: return
-                append(heading.title.ifBlank { "(Untitled heading)" })
+                append(heading.title.ifBlank { SqlHeadingsText.untitledHeading })
                 append("  H${heading.level}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
             }
         }
@@ -118,14 +119,31 @@ internal class SqlHeadingsPanel(
 
     private fun createToolbar(): JComponent {
         val actions = DefaultActionGroup(
-            object : AnAction("Refresh", "Refresh SQL headings", AllIcons.Actions.Refresh) {
+            object : AnAction(
+                SqlHeadingsText.refresh,
+                SqlHeadingsText.refreshDescription,
+                AllIcons.Actions.Refresh,
+            ) {
                 override fun actionPerformed(event: AnActionEvent) = refresh()
             },
-            object : AnAction("Collapse All", "Collapse all SQL heading sections", AllIcons.Actions.Collapseall) {
+            object : AnAction(
+                SqlHeadingsText.collapseAll,
+                SqlHeadingsText.collapseAllDescription,
+                AllIcons.Actions.Collapseall,
+            ) {
                 override fun actionPerformed(event: AnActionEvent) = setAllSectionsExpanded(false)
             },
-            object : AnAction("Expand All", "Expand all SQL heading sections", AllIcons.Actions.Expandall) {
+            object : AnAction(
+                SqlHeadingsText.expandAll,
+                SqlHeadingsText.expandAllDescription,
+                AllIcons.Actions.Expandall,
+            ) {
                 override fun actionPerformed(event: AnActionEvent) = setAllSectionsExpanded(true)
+            },
+            object : AnAction("帮助", "查看功能使用说明", AllIcons.Actions.Help) {
+                override fun actionPerformed(event: AnActionEvent) {
+                    Messages.showInfoMessage(project, HELP_TEXT, "SQL 标题使用说明")
+                }
             },
         )
         return ActionManager.getInstance()
@@ -147,14 +165,14 @@ internal class SqlHeadingsPanel(
             headings = emptyList()
             fileLabel.text = ""
             setTreeModel(emptyList())
-            tree.emptyText.text = "Open a SQL console or SQL file"
+            tree.emptyText.text = SqlHeadingsText.noSqlEditor
             return
         }
 
         headings = SqlHeadingParser.parse(editor.document.charsSequence)
         fileLabel.text = FileDocumentManager.getInstance().getFile(editor.document)?.presentableName.orEmpty()
         setTreeModel(headings)
-        tree.emptyText.text = "No headings. Add -- # Heading"
+        tree.emptyText.text = SqlHeadingsText.noHeadings
     }
 
     private fun isSqlEditor(editor: Editor): Boolean = ReadAction.compute<Boolean, RuntimeException> {
@@ -211,5 +229,35 @@ internal class SqlHeadingsPanel(
                 .filter { region -> region.startOffset in sectionStarts }
                 .forEach { region -> region.isExpanded = expanded }
         }
+    }
+
+    private companion object {
+        val HELP_TEXT = """
+            一、分级标题
+
+            使用 -- # 到 -- ##### 创建一级到五级标题。
+            标题区块在遇到下一个同级或更高级标题时结束。
+            光标离开标题行后显示 H1 到 H5 标签，回到标题行时恢复原始注释。
+
+            二、强调注释
+
+            -- @r  红色
+            -- @y  黄色
+            -- @b  蓝色
+            -- @g  绿色
+            -- @c  青色
+            -- @o  橙色
+            -- @p  紫色
+            -- @m  品红
+            -- @@   加粗并保留普通注释颜色
+            -- @@r  加粗并变成红色，其他颜色也可以同样组合
+
+            颜色字母不区分大小写。强调注释不会加入标题目录，也不会创建折叠区块。
+
+            三、侧栏操作
+
+            点击标题可以跳转到对应位置并展开该区块。
+            工具栏可以刷新目录、全部折叠或全部展开。
+        """.trimIndent()
     }
 }
