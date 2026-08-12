@@ -1,7 +1,6 @@
 package com.github.cgl.sqlheadings.editor
 
 import com.github.cgl.sqlheadings.model.SqlCommentParser
-import com.github.cgl.sqlheadings.model.SqlEmphasisColor
 import com.github.cgl.sqlheadings.model.SqlEmphasisComment
 import com.github.cgl.sqlheadings.model.SqlHeading
 import com.github.cgl.sqlheadings.model.SqlHeadingParser
@@ -9,6 +8,7 @@ import com.github.cgl.sqlheadings.toolwindow.SqlLanguageSupport
 import com.intellij.codeInsight.folding.CodeFoldingManager
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.event.CaretEvent
@@ -24,15 +24,12 @@ import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.ui.JBColor
 import com.intellij.util.Alarm
-import java.awt.Color
 import java.awt.Font
 import java.util.IdentityHashMap
+import java.util.TreeSet
 
 internal class SqlHeadingPresentationListener : EditorFactoryListener, DumbAware {
-    private val controllers = IdentityHashMap<Editor, SqlHeadingPresentationController>()
-
     override fun editorCreated(event: EditorFactoryEvent) {
         val editor = event.editor
         val project = editor.project ?: return
@@ -42,6 +39,14 @@ internal class SqlHeadingPresentationListener : EditorFactoryListener, DumbAware
     override fun editorReleased(event: EditorFactoryEvent) {
         controllers.remove(event.editor)?.dispose()
     }
+
+    companion object {
+        private val controllers = IdentityHashMap<Editor, SqlHeadingPresentationController>()
+
+        fun refreshAllPresentations() {
+            controllers.values.toList().forEach(SqlHeadingPresentationController::refreshAfterStyleChange)
+        }
+    }
 }
 
 private class SqlHeadingPresentationController(
@@ -50,6 +55,7 @@ private class SqlHeadingPresentationController(
 ) : Disposable, CaretListener, DocumentListener {
     private val alarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val presentationHighlighters = mutableListOf<RangeHighlighter>()
+    private val shorthandCandidateLines = TreeSet<Int>()
     private var needsFoldingUpdate = true
     private var lastActiveLine: Int? = null
 
@@ -70,9 +76,12 @@ private class SqlHeadingPresentationController(
     }
 
     override fun documentChanged(event: DocumentEvent) {
+        val hasShorthandCandidate = collectShorthandCandidateLines(event)
         needsFoldingUpdate = true
-        scheduleRefresh(150, true)
+        scheduleRefresh(if (hasShorthandCandidate) 0 else 150, true)
     }
+
+    fun refreshAfterStyleChange() = scheduleRefresh(0, false)
 
     private fun scheduleRefresh(delay: Int, updateFolding: Boolean = needsFoldingUpdate) {
         needsFoldingUpdate = needsFoldingUpdate || updateFolding
@@ -83,11 +92,17 @@ private class SqlHeadingPresentationController(
     private fun refresh() {
         if (editor.isDisposed) return
 
-        val headings = readSqlHeadings() ?: run {
+        val styleSettings = SqlHeadingStyleSettings.getInstance()
+        if (styleSettings.isEmphasisEnabled() && normalizeShorthandComments()) return
+
+        if (!isSqlDocument()) {
             clearPresentationHighlighters()
+            shorthandCandidateLines.clear()
             lastActiveLine = null
             return
         }
+
+        val headings = SqlHeadingParser.parse(editor.document.charsSequence)
 
         if (needsFoldingUpdate) {
             CodeFoldingManager.getInstance(project).updateFoldRegions(editor)
@@ -107,7 +122,6 @@ private class SqlHeadingPresentationController(
         }
 
         clearPresentationHighlighters()
-        val attributes = TextAttributes().apply { fontType = Font.BOLD }
         headings.filter { heading ->
             editor.document.getLineNumber(heading.offset) != activeLine &&
                 heading.titleStartOffset < heading.titleEndOffset
@@ -116,45 +130,80 @@ private class SqlHeadingPresentationController(
                 heading.titleStartOffset,
                 heading.titleEndOffset,
                 HighlighterLayer.ADDITIONAL_SYNTAX,
-                attributes,
+                TextAttributes().apply {
+                    fontType = Font.BOLD
+                    foregroundColor = styleSettings.headingColor(heading.level)
+                },
                 HighlighterTargetArea.EXACT_RANGE,
             )
         }
 
+        if (!styleSettings.isEmphasisEnabled()) return
         SqlCommentParser.parseEmphasisComments(editor.document.charsSequence).forEach { comment ->
             presentationHighlighters += editor.markupModel.addRangeHighlighter(
                 comment.markerStartOffset,
                 comment.lineEndOffset,
                 HighlighterLayer.ADDITIONAL_SYNTAX,
-                emphasisAttributes(comment),
+                emphasisAttributes(comment, styleSettings),
                 HighlighterTargetArea.EXACT_RANGE,
             )
         }
     }
 
-    private fun emphasisAttributes(comment: SqlEmphasisComment): TextAttributes {
+    private fun emphasisAttributes(
+        comment: SqlEmphasisComment,
+        styleSettings: SqlHeadingStyleSettings,
+    ): TextAttributes {
         val attributes = editor.colorsScheme.getAttributes(DefaultLanguageHighlighterColors.LINE_COMMENT)
             ?.clone()
             ?: TextAttributes()
         if (comment.bold) attributes.fontType = attributes.fontType or Font.BOLD
-        attributes.foregroundColor = when (comment.color) {
-            SqlEmphasisColor.RED -> JBColor(Color(0xB3261E), Color(0xFF7B72))
-            SqlEmphasisColor.YELLOW -> JBColor(Color(0x8A6100), Color(0xF2C94C))
-            SqlEmphasisColor.BLUE -> JBColor(Color(0x075DB7), Color(0x75B7FF))
-            SqlEmphasisColor.GREEN -> JBColor(Color(0x17753A), Color(0x70C989))
-            SqlEmphasisColor.CYAN -> JBColor(Color(0x007C91), Color(0x56D4DD))
-            SqlEmphasisColor.ORANGE -> JBColor(Color(0xA64B00), Color(0xFF9B5E))
-            SqlEmphasisColor.PURPLE -> JBColor(Color(0x6F42C1), Color(0xC59CFF))
-            SqlEmphasisColor.MAGENTA -> JBColor(Color(0xA12C78), Color(0xFF79C6))
-            null -> attributes.foregroundColor
+        comment.colorMarker?.let { marker ->
+            styleSettings.emphasisColor(marker)?.let { attributes.foregroundColor = it }
         }
         return attributes
     }
 
-    private fun readSqlHeadings(): List<SqlHeading>? = ReadAction.compute<List<SqlHeading>?, RuntimeException> {
+    private fun isSqlDocument(): Boolean = ReadAction.compute<Boolean, RuntimeException> {
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
-        if (!SqlLanguageSupport.isSql(psiFile?.language)) return@compute null
-        SqlHeadingParser.parse(editor.document.charsSequence)
+        SqlLanguageSupport.isSql(psiFile?.language)
+    }
+
+    private fun collectShorthandCandidateLines(event: DocumentEvent): Boolean {
+        val document = editor.document
+        val firstLine = document.getLineNumber(event.offset.coerceAtMost(document.textLength))
+        val lastOffset = (event.offset + event.newLength).coerceAtMost(document.textLength)
+        val lastLine = document.getLineNumber(lastOffset)
+        (firstLine..lastLine).forEach(shorthandCandidateLines::add)
+        return (firstLine..lastLine).any { line ->
+            val startOffset = document.getLineStartOffset(line)
+            val endOffset = document.getLineEndOffset(line)
+            SqlCommentParser.shorthandCommentPrefixOffset(
+                document.charsSequence.subSequence(startOffset, endOffset),
+            ) != null
+        }
+    }
+
+    private fun normalizeShorthandComments(): Boolean {
+        if (shorthandCandidateLines.isEmpty()) return false
+
+        val document = editor.document
+        val candidates = shorthandCandidateLines.toList()
+        shorthandCandidateLines.clear()
+        val insertOffsets = candidates.mapNotNull { line ->
+            if (line >= document.lineCount) return@mapNotNull null
+            val startOffset = document.getLineStartOffset(line)
+            val endOffset = document.getLineEndOffset(line)
+            SqlCommentParser.shorthandCommentPrefixOffset(
+                document.charsSequence.subSequence(startOffset, endOffset),
+            )?.let { startOffset + it }
+        }.sortedDescending()
+        if (insertOffsets.isEmpty()) return false
+
+        WriteCommandAction.runWriteCommandAction(project, "补全 SQL 强调注释", null, Runnable {
+            insertOffsets.forEach { offset -> document.insertString(offset, "-- ") }
+        })
+        return true
     }
 
     private fun clearPresentationHighlighters() {

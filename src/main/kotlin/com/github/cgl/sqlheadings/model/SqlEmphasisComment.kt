@@ -4,16 +4,10 @@ internal data class SqlEmphasisComment(
     val markerStartOffset: Int,
     val lineEndOffset: Int,
     val bold: Boolean,
-    val color: SqlEmphasisColor?,
+    val colorMarker: Char?,
 )
 
-internal enum class SqlEmphasisColor {
-    RED,
-    YELLOW,
-    BLUE,
-    GREEN,
-    CYAN,
-    ORANGE,
-    PURPLE,
-    MAGENTA,
+internal object SqlEmphasisMarkers {
+    val all: List<Char> = ('a'..'z').toList()
+    val defaults: Set<Char> = setOf('r', 'y', 'b', 'g', 'c', 'o', 'p', 'm')
 }

@@ -20,7 +20,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.util.Alarm
 import com.intellij.ui.ColoredTreeCellRenderer
@@ -142,7 +141,12 @@ internal class SqlHeadingsPanel(
             },
             object : AnAction("帮助", "查看功能使用说明", AllIcons.Actions.Help) {
                 override fun actionPerformed(event: AnActionEvent) {
-                    Messages.showInfoMessage(project, HELP_TEXT, "SQL 标题使用说明")
+                    SqlHeadingHelpDialog(project).show()
+                }
+            },
+            object : AnAction("配置样式", "配置标题和注释颜色", AllIcons.General.Settings) {
+                override fun actionPerformed(event: AnActionEvent) {
+                    SqlHeadingStyleDialog(project).show()
                 }
             },
         )
@@ -229,35 +233,5 @@ internal class SqlHeadingsPanel(
                 .filter { region -> region.startOffset in sectionStarts }
                 .forEach { region -> region.isExpanded = expanded }
         }
-    }
-
-    private companion object {
-        val HELP_TEXT = """
-            一、分级标题
-
-            使用 -- # 到 -- ##### 创建一级到五级标题。
-            标题区块在遇到下一个同级或更高级标题时结束。
-            光标离开标题行后显示 H1 到 H5 标签，回到标题行时恢复原始注释。
-
-            二、强调注释
-
-            -- @r  红色
-            -- @y  黄色
-            -- @b  蓝色
-            -- @g  绿色
-            -- @c  青色
-            -- @o  橙色
-            -- @p  紫色
-            -- @m  品红
-            -- @@   加粗并保留普通注释颜色
-            -- @@r  加粗并变成红色，其他颜色也可以同样组合
-
-            颜色字母不区分大小写。强调注释不会加入标题目录，也不会创建折叠区块。
-
-            三、侧栏操作
-
-            点击标题可以跳转到对应位置并展开该区块。
-            工具栏可以刷新目录、全部折叠或全部展开。
-        """.trimIndent()
     }
 }
