@@ -63,6 +63,7 @@ Community 测试沙箱不包含 `com.intellij.database`；在生成 searchable o
 - README 内容保持中英文双语。
 - 面向用户的发布需要更新 Marketplace 元数据和变更说明。
 - 每次可分发的行为变更都要提升插件版本。
+- 每次影响插件界面或行为的改动完成后，都必须重新执行 `buildPlugin` 并提供最新 ZIP，供用户安装测试。
 - 推送到 `main` 会刷新 `continuous` 预发行版。
 - 符合 `v*` 的版本标签会创建不可变的 GitHub Release。
 - 不得提交 `.gradle/`、`.intellijPlatform/`、`.idea/`、`build/` 或本地凭据。

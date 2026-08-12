@@ -20,6 +20,7 @@ import java.awt.event.MouseEvent
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JPanel
+import javax.swing.JSeparator
 import com.intellij.ui.components.JBCheckBox
 
 internal class SqlHeadingStyleDialog(private val project: Project) : DialogWrapper(project, true) {
@@ -39,10 +40,7 @@ internal class SqlHeadingStyleDialog(private val project: Project) : DialogWrapp
     override fun createCenterPanel(): JComponent = JBPanel<JBPanel<*>>(BorderLayout(0, 12)).apply {
         preferredSize = Dimension(560, 410)
         add(createHeadingSection(), BorderLayout.NORTH)
-        add(JBPanel<JBPanel<*>>(BorderLayout(0, 6)).apply {
-            add(emphasisEnabled, BorderLayout.NORTH)
-            add(createEmphasisSection(), BorderLayout.CENTER)
-        }, BorderLayout.CENTER)
+        add(createEmphasisSection(), BorderLayout.CENTER)
     }
 
     override fun createSouthPanel(): JComponent = JBPanel<JBPanel<*>>(BorderLayout()).apply {
@@ -74,10 +72,18 @@ internal class SqlHeadingStyleDialog(private val project: Project) : DialogWrapp
         (1..5).forEach { level -> add(createEntry("H$level", level, compact = true)) }
     }
 
-    private fun createEmphasisSection(): JPanel = JPanel(GridLayout(6, 5, 3, 4)).apply {
-        border = com.intellij.ui.IdeBorderFactory.createTitledBorder("@ 注释颜色", false)
-        SqlEmphasisMarkers.all.forEach { marker -> add(createEntry(marker.toString(), marker)) }
-        repeat(4) { add(JPanel()) }
+    private fun createEmphasisSection(): JPanel = JBPanel<JBPanel<*>>(BorderLayout(0, 6)).apply {
+        add(JBPanel<JBPanel<*>>(BorderLayout(8, 0)).apply {
+            add(JBPanel<JBPanel<*>>(FlowLayout(FlowLayout.LEFT, 8, 0)).apply {
+                add(JBLabel("@ 注释颜色"))
+                add(emphasisEnabled)
+            }, BorderLayout.WEST)
+            add(JSeparator(), BorderLayout.CENTER)
+        }, BorderLayout.NORTH)
+        add(JPanel(GridLayout(6, 5, 3, 4)).apply {
+            SqlEmphasisMarkers.all.forEach { marker -> add(createEntry(marker.toString(), marker)) }
+            repeat(4) { add(JPanel()) }
+        }, BorderLayout.CENTER)
     }
 
     private fun createEntry(label: String, key: Any, compact: Boolean = false): JPanel =

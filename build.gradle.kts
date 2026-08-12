@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.github.cgl"
-version = "1.0.1"
+version = "1.0.3"
 
 repositories {
     mavenCentral()
