@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.github.cgl"
-version = "1.0.3"
+version = "1.0.4"
 
 repositories {
     mavenCentral()
@@ -35,7 +35,7 @@ tasks.withType<KotlinCompile>().configureEach {
 
 intellijPlatform {
     pluginConfiguration {
-        name = "SQL Heading Folding"
+        name = "SQL Heading Folding / SQL 标题折叠"
 
         ideaVersion {
             sinceBuild = "232"

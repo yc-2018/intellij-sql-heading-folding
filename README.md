@@ -1,4 +1,4 @@
-# SQL Heading Folding
+# SQL Heading Folding / SQL 标题折叠
 
 [![Build and release](https://github.com/yc-2018/intellij-sql-heading-folding/actions/workflows/build-release.yml/badge.svg)](https://github.com/yc-2018/intellij-sql-heading-folding/actions/workflows/build-release.yml)
 [![Continuous release](https://img.shields.io/github/v/release/yc-2018/intellij-sql-heading-folding?include_prereleases&label=download)](https://github.com/yc-2018/intellij-sql-heading-folding/releases/tag/continuous)
@@ -65,9 +65,9 @@ The plugin declares build `232` as its minimum and intentionally has no upper bu
 
 ### JetBrains Marketplace
 
-After Marketplace approval, open **Settings > Plugins > Marketplace**, search for **SQL Heading Folding**, and select **Install**.
+After Marketplace approval, open **Settings > Plugins > Marketplace**, search for **SQL Heading Folding / SQL 标题折叠**, and select **Install**.
 
-Marketplace 审核通过后，打开 **Settings > Plugins > Marketplace**，搜索 **SQL Heading Folding** 并安装。
+Marketplace 审核通过后，打开 **Settings > Plugins > Marketplace**，搜索 **SQL Heading Folding / SQL 标题折叠** 并安装。
 
 ### Install from disk / 从磁盘安装
 
