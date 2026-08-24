@@ -7,7 +7,7 @@ import com.github.cgl.sqlheadings.model.SqlHeadingParser
 import com.github.cgl.sqlheadings.toolwindow.SqlLanguageSupport
 import com.intellij.codeInsight.folding.CodeFoldingManager
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.runReadActionBlocking
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.editor.Editor
@@ -53,7 +53,7 @@ private class SqlHeadingPresentationController(
     private val project: Project,
     private val editor: Editor,
 ) : Disposable, CaretListener, DocumentListener {
-    private val alarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
+    private val alarm = Alarm(this)
     private val presentationHighlighters = mutableListOf<RangeHighlighter>()
     private val shorthandCandidateLines = TreeSet<Int>()
     private var needsFoldingUpdate = true
@@ -164,7 +164,7 @@ private class SqlHeadingPresentationController(
         return attributes
     }
 
-    private fun isSqlDocument(): Boolean = ReadAction.compute<Boolean, RuntimeException> {
+    private fun isSqlDocument(): Boolean = runReadActionBlocking {
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
         SqlLanguageSupport.isSql(psiFile?.language)
     }

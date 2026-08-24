@@ -17,6 +17,8 @@ class SqlCommentParserTest {
         assertEquals(true, comments[1].bold)
         assertEquals('g', comments[2].colorMarker)
         assertEquals(true, comments[2].bold)
+        assertEquals("Red note", comments[0].text)
+        assertEquals("Bold note", comments[1].text)
         assertEquals(text.indexOf("-- @r"), comments[0].markerStartOffset)
         assertEquals(text.indexOf("\n-- @@"), comments[0].lineEndOffset)
         assertEquals(text.length, comments[2].lineEndOffset)

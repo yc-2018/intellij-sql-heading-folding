@@ -36,4 +36,10 @@ internal object SqlHeadingsText {
 
     val noHeadings: String
         get() = value("暂无标题，请添加 -- # 标题", "No headings. Add -- # Heading")
+
+    val coloredNodes: String
+        get() = value("有色节点", "Colored nodes")
+
+    val coloredNodesDescription: String
+        get() = value("将带颜色的注释显示在侧边栏目录中", "Show colored comments in the outline")
 }

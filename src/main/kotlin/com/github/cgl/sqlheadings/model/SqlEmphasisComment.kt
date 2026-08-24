@@ -3,6 +3,7 @@ package com.github.cgl.sqlheadings.model
 internal data class SqlEmphasisComment(
     val markerStartOffset: Int,
     val lineEndOffset: Int,
+    val text: String,
     val bold: Boolean,
     val colorMarker: Char?,
 )

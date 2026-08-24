@@ -78,4 +78,31 @@ select 1;"""
         assertEquals(text.indexOf("\r\n-- # Second"), first.sectionEndOffset)
         assertEquals(text.indexOf("\r\n"), first.foldStartOffset)
     }
+
+    @Test
+    fun `keeps one trailing blank line visible before the next heading`() {
+        val text = "-- # First\nselect 1;\n\n-- # Second\nselect 2;"
+
+        val first = SqlHeadingParser.parse(text).first()
+
+        assertEquals(text.indexOf("\n\n-- # Second"), first.sectionEndOffset)
+    }
+
+    @Test
+    fun `keeps one trailing crlf blank line visible before the next heading`() {
+        val text = "-- # First\r\nselect 1;\r\n\r\n-- # Second\r\nselect 2;"
+
+        val first = SqlHeadingParser.parse(text).first()
+
+        assertEquals(text.indexOf("\r\n\r\n-- # Second"), first.sectionEndOffset)
+    }
+
+    @Test
+    fun `does not create a blank line when the section has none`() {
+        val text = "-- # First\nselect 1;\n-- # Second\nselect 2;"
+
+        val first = SqlHeadingParser.parse(text).first()
+
+        assertEquals(text.indexOf("\n-- # Second"), first.sectionEndOffset)
+    }
 }

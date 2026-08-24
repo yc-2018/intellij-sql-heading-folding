@@ -8,10 +8,10 @@
 
 ## 工具链
 
-- Gradle 和编译使用 JDK 17。
+- Gradle 和编译使用 JDK 21。
 - 使用仓库中已提交的 Gradle Wrapper，不要求全局安装 Gradle。
-- JVM 字节码版本保持为 17。
-- 最低 IntelliJ Platform build 为 `232`（2023.2）。
+- JVM 字节码版本保持为 21。
+- 最低 IntelliJ Platform build 为 `262`（2026.2）。
 - 除非已验证的不兼容问题需要临时限制，否则不设置平台最高 build 限制。
 - 不要添加开发者机器的 JDK 路径或其他绝对本地路径。
 
@@ -46,17 +46,22 @@
 
 ## 验证
 
-提交行为变更前运行：
+每次完成影响插件界面或行为的改动后，必须使用 JDK 21 运行：
 
 ```powershell
 .\gradlew.bat test buildPlugin
 ```
 
+- 构建成功后，向用户提供 `build/distributions/` 下最新 ZIP 的完整路径和 SHA-256。
+- ZIP 文件名中的版本必须与 `build.gradle.kts` 中的插件版本一致。
+- 编译输出中出现 deprecated 或 scheduled-for-removal API 警告时，应优先迁移到当前最低平台支持的新 API，不得仅通过压制警告处理。
+- 完成用户要求的界面或行为改动，并通过完整测试和打包后，默认直接提交、创建对应版本标签并推送；只有用户明确要求“先别推送”或“只供测试”时才保留在本地。
+
 解析器行为变更需要在 `SqlHeadingParserTest` 中添加有针对性的单元测试。
 
 兼容性变更时，应在 IntelliJ IDEA Ultimate 和 DataGrip 中测试打包 ZIP；条件允许时，再抽样测试其他内置 Database Tools 的 JetBrains IDE。在发布到 Marketplace 前，使用 JetBrains Plugin Verifier 验证有代表性的 IDE 版本。
 
-Community 测试沙箱不包含 `com.intellij.database`；在生成 searchable options 时出现缺少插件的警告属于预期现象，不能误判为编译或单元测试失败。
+测试沙箱出现平台插件警告时，需要以 Gradle 最终任务结果、单元测试结果和 ZIP 是否成功生成为准；不得忽略真实的编译或测试失败。
 
 ## 文档与发布
 
@@ -64,6 +69,12 @@ Community 测试沙箱不包含 `com.intellij.database`；在生成 searchable o
 - 面向用户的发布需要更新 Marketplace 元数据和变更说明。
 - 每次可分发的行为变更都要提升插件版本。
 - 每次影响插件界面或行为的改动完成后，都必须重新执行 `buildPlugin` 并提供最新 ZIP，供用户安装测试。
-- 推送到 `main` 会刷新 `continuous` 预发行版。
-- 符合 `v*` 的版本标签会创建不可变的 GitHub Release。
+- 每次可分发版本通过验证后，先执行 `git diff --check` 并确认变更范围，再提交相关文件；无需等待用户再次要求推送。
+- 正式版本标签必须使用 `v{build.gradle.kts 中的版本}`，例如版本 `1.1.2` 对应标签 `v1.1.2`。
+- 推送正式版本时，依次推送 `main` 和对应版本标签；推送前确认该标签尚不存在。
+- 不得移动、覆盖或重新创建已经发布的版本标签。
+- 推送到 `main` 会运行测试、构建 ZIP、上传 Actions 构件并刷新 `continuous` 预发行版。
+- 符合 `v*` 的版本标签会再次运行验证、发布到 JetBrains Marketplace，并创建不可变的 GitHub Release。
+- GitHub Actions 必须使用 JDK 21 和仓库提交的 Gradle Wrapper，不得依赖全局 Gradle。
+- Marketplace Token 只能通过 GitHub Secret `JETBRAINS_MARKETPLACE_TOKEN` 注入。
 - 不得提交 `.gradle/`、`.intellijPlatform/`、`.idea/`、`build/` 或本地凭据。

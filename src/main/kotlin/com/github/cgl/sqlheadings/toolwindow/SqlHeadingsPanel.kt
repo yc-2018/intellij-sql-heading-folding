@@ -1,5 +1,8 @@
 package com.github.cgl.sqlheadings.toolwindow
 
+import com.github.cgl.sqlheadings.editor.SqlHeadingStyleSettings
+import com.github.cgl.sqlheadings.model.SqlCommentParser
+import com.github.cgl.sqlheadings.model.SqlEmphasisComment
 import com.github.cgl.sqlheadings.model.SqlHeading
 import com.github.cgl.sqlheadings.model.SqlHeadingParser
 import com.intellij.icons.AllIcons
@@ -8,7 +11,7 @@ import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
-import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.runReadActionBlocking
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -27,8 +30,10 @@ import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.TreeSpeedSearch
 import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.treeStructure.Tree
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -38,13 +43,16 @@ import javax.swing.JTree
 import javax.swing.KeyStroke
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
+import javax.swing.tree.TreeNode
+import javax.swing.tree.TreePath
 
 internal class SqlHeadingsPanel(
     private val project: Project,
 ) : SimpleToolWindowPanel(true, true), Disposable {
     private val tree = Tree()
     private val fileLabel = JBLabel()
-    private val refreshAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
+    private val showColoredNodes = JBCheckBox(SqlHeadingsText.coloredNodes, false)
+    private val refreshAlarm = Alarm(this)
     private var activeDocument: Document? = null
     private var headings: List<SqlHeading> = emptyList()
 
@@ -56,6 +64,11 @@ internal class SqlHeadingsPanel(
         body.add(fileLabel, BorderLayout.NORTH)
         body.add(ScrollPaneFactory.createScrollPane(tree, true), BorderLayout.CENTER)
         setContent(body)
+
+        showColoredNodes.addActionListener {
+            refresh()
+            expandAllTreeRows()
+        }
 
         project.messageBus.connect(this).subscribe(
             FileEditorManagerListener.FILE_EDITOR_MANAGER,
@@ -93,9 +106,20 @@ internal class SqlHeadingsPanel(
                 row: Int,
                 hasFocus: Boolean,
             ) {
-                val heading = (value as? DefaultMutableTreeNode)?.userObject as? SqlHeading ?: return
-                append(heading.title.ifBlank { SqlHeadingsText.untitledHeading })
-                append("  H${heading.level}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                when (val item = (value as? DefaultMutableTreeNode)?.userObject) {
+                    is SqlHeading -> {
+                        append(item.title.ifBlank { SqlHeadingsText.untitledHeading })
+                        append("  H${item.level}", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                    }
+                    is ColoredCommentNode -> {
+                        val style = if (item.comment.bold) {
+                            SimpleTextAttributes.STYLE_BOLD
+                        } else {
+                            SimpleTextAttributes.STYLE_PLAIN
+                        }
+                        append(item.label, SimpleTextAttributes(style, item.color))
+                    }
+                }
             }
         }
 
@@ -105,12 +129,12 @@ internal class SqlHeadingsPanel(
             override fun mouseClicked(event: MouseEvent) {
                 if (event.button != MouseEvent.BUTTON1) return
                 val path = tree.getPathForLocation(event.x, event.y) ?: return
-                navigateTo((path.lastPathComponent as? DefaultMutableTreeNode)?.userObject as? SqlHeading)
+                navigateTo((path.lastPathComponent as? DefaultMutableTreeNode)?.userObject)
             }
         })
 
         tree.registerKeyboardAction(
-            { navigateTo(selectedHeading()) },
+            { navigateTo(selectedItem()) },
             KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0),
             JComponent.WHEN_FOCUSED,
         )
@@ -147,13 +171,24 @@ internal class SqlHeadingsPanel(
             object : AnAction("配置样式", "配置标题和注释颜色", AllIcons.General.Settings) {
                 override fun actionPerformed(event: AnActionEvent) {
                     SqlHeadingStyleDialog(project).show()
+                    refresh()
                 }
             },
         )
-        return ActionManager.getInstance()
+        val actionToolbar = ActionManager.getInstance()
             .createActionToolbar("SqlHeadingsToolbar", actions, true)
             .apply { targetComponent = this@SqlHeadingsPanel }
             .component
+        return JPanel(BorderLayout()).apply {
+            add(actionToolbar, BorderLayout.CENTER)
+            add(JPanel(BorderLayout()).apply {
+                border = javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 6)
+                add(showColoredNodes.apply {
+                    isOpaque = false
+                    toolTipText = SqlHeadingsText.coloredNodesDescription
+                }, BorderLayout.CENTER)
+            }, BorderLayout.EAST)
+        }
     }
 
     private fun scheduleRefresh(delay: Int = 150) {
@@ -163,62 +198,141 @@ internal class SqlHeadingsPanel(
 
     private fun refresh() {
         val editor = FileEditorManager.getInstance(project).selectedTextEditor
+        val preserveExpansion = activeDocument === editor?.document
         activeDocument = editor?.document
 
         if (editor == null || !isSqlEditor(editor)) {
             headings = emptyList()
             fileLabel.text = ""
-            setTreeModel(emptyList())
+            setTreeModel(emptyList(), preserveExpansion = false)
             tree.emptyText.text = SqlHeadingsText.noSqlEditor
             return
         }
 
         headings = SqlHeadingParser.parse(editor.document.charsSequence)
         fileLabel.text = FileDocumentManager.getInstance().getFile(editor.document)?.presentableName.orEmpty()
-        setTreeModel(headings)
+        val coloredComments = if (showColoredNodes.isSelected && SqlHeadingStyleSettings.getInstance().isEmphasisEnabled()) {
+            val settings = SqlHeadingStyleSettings.getInstance()
+            SqlCommentParser.parseEmphasisComments(editor.document.charsSequence).mapNotNull { comment ->
+                val marker = comment.colorMarker ?: return@mapNotNull null
+                settings.emphasisColor(marker)?.let { color -> ColoredCommentNode(comment, color) }
+            }
+        } else {
+            emptyList()
+        }
+        setTreeModel(headings, coloredComments, preserveExpansion)
         tree.emptyText.text = SqlHeadingsText.noHeadings
     }
 
-    private fun isSqlEditor(editor: Editor): Boolean = ReadAction.compute<Boolean, RuntimeException> {
+    private fun isSqlEditor(editor: Editor): Boolean = runReadActionBlocking {
         val psiFile = com.intellij.psi.PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
         SqlLanguageSupport.isSql(psiFile?.language)
     }
 
-    private fun setTreeModel(items: List<SqlHeading>) {
+    private fun setTreeModel(
+        headingItems: List<SqlHeading>,
+        coloredComments: List<ColoredCommentNode> = emptyList(),
+        preserveExpansion: Boolean = true,
+    ) {
+        val expandedPaths = if (preserveExpansion) captureExpandedIndexPaths() else emptySet()
         val root = DefaultMutableTreeNode()
         val parents = ArrayDeque<Pair<Int, DefaultMutableTreeNode>>()
 
-        items.forEach { heading ->
-            while (parents.isNotEmpty() && parents.last().first >= heading.level) {
-                parents.removeLast()
-            }
+        (headingItems + coloredComments).sortedBy(::itemOffset).forEach { item ->
+            when (item) {
+                is SqlHeading -> {
+                    while (parents.isNotEmpty() && parents.last().first >= item.level) {
+                        parents.removeLast()
+                    }
 
-            val node = DefaultMutableTreeNode(heading)
-            (parents.lastOrNull()?.second ?: root).add(node)
-            parents.addLast(heading.level to node)
+                    val node = DefaultMutableTreeNode(item)
+                    (parents.lastOrNull()?.second ?: root).add(node)
+                    parents.addLast(item.level to node)
+                }
+                is ColoredCommentNode -> (parents.lastOrNull()?.second ?: root).add(DefaultMutableTreeNode(item))
+            }
         }
 
         tree.model = DefaultTreeModel(root)
-        repeat(tree.rowCount) { row -> tree.expandRow(row) }
+        if (preserveExpansion) {
+            restoreExpandedIndexPaths(expandedPaths)
+        } else {
+            expandAllTreeRows()
+        }
     }
 
-    private fun selectedHeading(): SqlHeading? =
-        (tree.lastSelectedPathComponent as? DefaultMutableTreeNode)?.userObject as? SqlHeading
+    private fun captureExpandedIndexPaths(): Set<List<Int>> {
+        val root = tree.model.root as? TreeNode ?: return emptySet()
+        val expanded = tree.getExpandedDescendants(TreePath(root)) ?: return emptySet()
+        return buildSet {
+            while (expanded.hasMoreElements()) {
+                val components = expanded.nextElement().path
+                var parent = root
+                val indexes = mutableListOf<Int>()
+                for (component in components.drop(1)) {
+                    val child = component as? TreeNode ?: break
+                    val index = parent.getIndex(child)
+                    if (index < 0) break
+                    indexes += index
+                    parent = child
+                }
+                if (indexes.isNotEmpty()) add(indexes)
+            }
+        }
+    }
 
-    private fun navigateTo(heading: SqlHeading?) {
-        heading ?: return
+    private fun restoreExpandedIndexPaths(paths: Set<List<Int>>) {
+        val root = tree.model.root as? TreeNode ?: return
+        tree.expandPath(TreePath(root))
+        paths.sortedBy(List<Int>::size).forEach { indexes ->
+            var node = root
+            val components = mutableListOf<Any>(root)
+            for (index in indexes) {
+                if (index !in 0 until node.childCount) break
+                node = node.getChildAt(index)
+                components += node
+            }
+            if (components.size == indexes.size + 1) {
+                tree.expandPath(TreePath(components.toTypedArray()))
+            }
+        }
+    }
+
+    private fun expandAllTreeRows() {
+        var row = 0
+        while (row < tree.rowCount) {
+            tree.expandRow(row)
+            row++
+        }
+    }
+
+    private fun itemOffset(item: Any): Int = when (item) {
+        is SqlHeading -> item.offset
+        is ColoredCommentNode -> item.comment.markerStartOffset
+        else -> Int.MAX_VALUE
+    }
+
+    private fun selectedItem(): Any? =
+        (tree.lastSelectedPathComponent as? DefaultMutableTreeNode)?.userObject
+
+    private fun navigateTo(item: Any?) {
+        val offset = when (item) {
+            is SqlHeading -> item.offset
+            is ColoredCommentNode -> item.comment.markerStartOffset
+            else -> return
+        }
         val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
         if (editor.document != activeDocument) return
 
         editor.foldingModel.runBatchFoldingOperation {
             editor.foldingModel.allFoldRegions
                 .filter { region ->
-                    heading.offset in region.startOffset until region.endOffset ||
-                        region.startOffset == heading.foldStartOffset
+                    offset in region.startOffset until region.endOffset ||
+                        item is SqlHeading && region.startOffset == item.foldStartOffset
                 }
                 .forEach { region -> region.isExpanded = true }
         }
-        editor.caretModel.moveToOffset(heading.offset.coerceAtMost(editor.document.textLength))
+        editor.caretModel.moveToOffset(offset.coerceAtMost(editor.document.textLength))
         editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
         editor.contentComponent.requestFocusInWindow()
     }
@@ -234,4 +348,14 @@ internal class SqlHeadingsPanel(
                 .forEach { region -> region.isExpanded = expanded }
         }
     }
+}
+
+private data class ColoredCommentNode(
+    val comment: SqlEmphasisComment,
+    val color: Color,
+) {
+    val label: String
+        get() = comment.text.ifBlank {
+            comment.colorMarker?.let { marker -> "@$marker" }.orEmpty()
+        }
 }

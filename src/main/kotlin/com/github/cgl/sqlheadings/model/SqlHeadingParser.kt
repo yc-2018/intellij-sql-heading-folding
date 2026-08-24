@@ -55,6 +55,14 @@ internal object SqlHeadingParser {
         var end = boundaryOffset
         if (end > 0 && text[end - 1] == '\n') end--
         if (end > 0 && text[end - 1] == '\r') end--
+
+        val lastLineStart = text.lastIndexOf('\n', (end - 1).coerceAtLeast(0)).let { lineFeed ->
+            if (lineFeed == -1) 0 else lineFeed + 1
+        }
+        if (text.substring(lastLineStart, end).isBlank() && lastLineStart > 0) {
+            end = lastLineStart - 1
+            if (end > 0 && text[end - 1] == '\r') end--
+        }
         return end
     }
 }

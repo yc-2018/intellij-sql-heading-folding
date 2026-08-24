@@ -2,12 +2,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.9.25"
-    id("org.jetbrains.intellij.platform") version "2.2.1"
+    kotlin("jvm") version "2.4.10"
+    id("org.jetbrains.intellij.platform") version "2.18.1"
 }
 
 group = "com.github.cgl"
-version = "1.0.4"
+version = "1.1.2"
 
 repositories {
     mavenCentral()
@@ -18,7 +18,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaCommunity("2023.2.5")
+        intellijIdea("2026.2.1")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
     }
 
@@ -26,11 +26,11 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-    compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_21)
 }
 
 intellijPlatform {
@@ -38,7 +38,7 @@ intellijPlatform {
         name = "SQL Heading Folding / SQL 标题折叠"
 
         ideaVersion {
-            sinceBuild = "232"
+            sinceBuild = "262"
             untilBuild = provider { null }
         }
     }

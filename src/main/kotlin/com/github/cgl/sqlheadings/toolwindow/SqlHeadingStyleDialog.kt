@@ -5,7 +5,7 @@ import com.github.cgl.sqlheadings.editor.SqlHeadingStyleSettings
 import com.github.cgl.sqlheadings.model.SqlEmphasisMarkers
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
-import com.intellij.ui.ColorChooser
+import com.intellij.ui.ColorChooserService
 import com.intellij.icons.AllIcons
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
@@ -94,7 +94,8 @@ internal class SqlHeadingStyleDialog(private val project: Project) : DialogWrapp
             toolTipText = "点击选择 $label 颜色"
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(event: MouseEvent) {
-                    val selected = ColorChooser.chooseColor(project, this@apply, "选择 $label 颜色", colorFor(key), true)
+                    val selected = ColorChooserService.getInstance()
+                        .showDialog(project, this@apply, "选择 $label 颜色", colorFor(key), true)
                     if (selected != null) setColor(key, selected)
                 }
             })

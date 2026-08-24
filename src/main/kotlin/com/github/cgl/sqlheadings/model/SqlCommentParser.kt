@@ -22,6 +22,7 @@ internal object SqlCommentParser {
             SqlEmphasisComment(
                 markerStartOffset = source.indexOf("--", match.range.first).coerceAtLeast(match.range.first),
                 lineEndOffset = lineEnd,
+                text = match.groups[3]?.value?.trim().orEmpty(),
                 bold = marker.length == 2,
                 colorMarker = colorMarker,
             )

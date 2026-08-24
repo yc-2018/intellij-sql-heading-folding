@@ -17,6 +17,8 @@ Hierarchical headings, native folding, reading-mode labels, and outline navigati
 - Start a line with `@r ` or `@@g ` and the plugin adds the SQL comment prefix after the trailing space is typed; SQL variables such as `@result` and `@@ROWCOUNT` remain unchanged. / 可在行首输入 `@r ` 或 `@@g `，键入标记后的空格时插件才会补上 SQL 注释前缀；`@result`、`@@ROWCOUNT` 等 SQL 变量不会被修改。
 - Configure heading and comment colors from the tool window toolbar; settings apply to every project. / 可从工具窗口工具栏配置标题和注释颜色，设置对所有项目生效。
 - Disable color comments from the style dialog when a project uses SQL variables that begin with `@`. / 当项目大量使用以 `@` 开头的 SQL 变量时，可在样式配置中关闭颜色注释。
+- Optionally include colored comments in the outline, rendered with their configured colors. / 可选择在目录中显示彩色注释节点，并使用已配置的颜色渲染。
+- Keep one trailing blank line visible when a folded section already ends with blank lines. / 标题区块末尾原本存在空行时，折叠后保留一个可见空行。
 - Navigate all headings from the **SQL Headings** tool window. / 在 **SQL Headings** 工具窗口中浏览并跳转全部标题。
 - Refresh, collapse all sections, or expand all sections from the tool window toolbar. / 支持刷新、全部折叠和全部展开。
 
@@ -52,14 +54,14 @@ Section boundaries follow heading levels. An `H2` section ends at the next `H1` 
 
 | Product / 产品 | Supported versions / 支持版本 | Notes / 说明 |
 | --- | --- | --- |
-| IntelliJ IDEA Ultimate | 2023.2 and later / 2023.2 及后续版本 | Primary target; Database Tools is bundled / 重点测试产品，已内置 Database Tools |
-| DataGrip | 2023.2 and later / 2023.2 及后续版本 | Primary target; Database Tools is bundled / 重点测试产品，已内置数据库功能 |
-| Other JetBrains IDEs / 其他 JetBrains IDE | 2023.2 and later / 2023.2 及后续版本 | Supported whenever the product provides `com.intellij.database`; Marketplace exposes all eligible products automatically / 只要产品提供该依赖就支持，Marketplace 会自动覆盖全部符合条件的产品 |
+| IntelliJ IDEA Ultimate | 2026.2 and later / 2026.2 及后续版本 | Primary target; Database Tools is bundled / 重点测试产品，已内置 Database Tools |
+| DataGrip | 2026.2 and later / 2026.2 及后续版本 | Primary target; Database Tools is bundled / 重点测试产品，已内置数据库功能 |
+| Other JetBrains IDEs / 其他 JetBrains IDE | 2026.2 and later / 2026.2 及后续版本 | Supported whenever the product provides `com.intellij.database`; Marketplace exposes all eligible products automatically / 只要产品提供该依赖就支持，Marketplace 会自动覆盖全部符合条件的产品 |
 | Products without Database Tools / 不含数据库工具的产品 | Not available / 不可用 | The required `com.intellij.database` plugin is missing / 缺少必需依赖 |
 
-The plugin declares build `232` as its minimum and intentionally has no upper build limit. New IDE releases should still be tested before being marked as verified on JetBrains Marketplace.
+The plugin declares build `262` as its minimum and intentionally has no upper build limit. New IDE releases should still be tested before being marked as verified on JetBrains Marketplace.
 
-插件最低版本为 build `232`，不设置最高版本限制。新的 IDE 大版本仍应在 JetBrains Marketplace 标记为已验证前进行实际测试。
+插件最低版本为 build `262`，不设置最高版本限制。新的 IDE 大版本仍应在 JetBrains Marketplace 标记为已验证前进行实际测试。
 
 ## Installation / 安装
 
@@ -77,9 +79,9 @@ Download the latest ZIP from the [continuous release](https://github.com/yc-2018
 
 ## Build / 构建
 
-Building from source requires JDK 17. Installing the plugin does not require a separate JDK because JetBrains IDEs use their bundled runtime.
+Building from source requires JDK 21. Installing the plugin does not require a separate JDK because JetBrains IDEs use their bundled runtime.
 
-源码构建需要 JDK 17。普通用户安装插件不需要额外安装 JDK，插件使用 JetBrains IDE 自带运行时。
+源码构建需要 JDK 21。普通用户安装插件不需要额外安装 JDK，插件使用 JetBrains IDE 自带运行时。
 
 ```powershell
 .\gradlew.bat test buildPlugin
@@ -91,9 +93,9 @@ The plugin ZIP is generated under `build/distributions/`.
 
 ## Development / 开发
 
-- Kotlin 1.9 and JVM 17
+- Kotlin 2.4 and JVM 21
 - IntelliJ Platform Gradle Plugin 2.x
-- Minimum platform build: `232`
+- Minimum platform build: `262`
 - Plugin ID: `com.github.cgl.sql-heading-folding`
 - Required runtime plugin: `com.intellij.database` (Marketplace uses this dependency to determine compatible JetBrains products)
 
@@ -112,8 +114,8 @@ Every push to `main` runs tests, builds the plugin, uploads an Actions artifact,
 每次推送到 `main` 都会运行测试、构建插件并刷新 `continuous` 预发行版；推送 `v*` 标签会将插件发布到 JetBrains Marketplace，并创建正式 GitHub Release。首次发布前，请在 GitHub 仓库的 `Settings > Secrets and variables > Actions` 中，将 Marketplace 永久 Token 添加为名为 `JETBRAINS_MARKETPLACE_TOKEN` 的 Actions Secret。
 
 ```powershell
-git tag v1.0.1
-git push origin v1.0.1
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
 ## Source / 源码
