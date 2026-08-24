@@ -95,7 +95,7 @@ internal class SqlHeadingStyleDialog(private val project: Project) : DialogWrapp
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(event: MouseEvent) {
                     val selected = ColorChooserService.getInstance()
-                        .showDialog(project, this@apply, "选择 $label 颜色", colorFor(key), true)
+                        .showDialog(project, event.component, "选择 $label 颜色", colorFor(key), true)
                     if (selected != null) setColor(key, selected)
                 }
             })

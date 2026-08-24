@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -7,7 +8,7 @@ plugins {
 }
 
 group = "com.github.cgl"
-version = "1.1.2"
+version = "1.1.3"
 
 repositories {
     mavenCentral()
@@ -31,6 +32,7 @@ kotlin {
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions.jvmTarget.set(JvmTarget.JVM_21)
+    compilerOptions.jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
 }
 
 intellijPlatform {
