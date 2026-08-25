@@ -7,7 +7,7 @@ import com.github.cgl.sqlheadings.model.SqlHeadingParser
 import com.github.cgl.sqlheadings.toolwindow.SqlLanguageSupport
 import com.intellij.codeInsight.folding.CodeFoldingManager
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.runReadActionBlocking
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.editor.Editor
@@ -23,6 +23,7 @@ import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.util.Alarm
 import java.awt.Font
@@ -164,10 +165,10 @@ private class SqlHeadingPresentationController(
         return attributes
     }
 
-    private fun isSqlDocument(): Boolean = runReadActionBlocking {
+    private fun isSqlDocument(): Boolean = ApplicationManager.getApplication().runReadAction(Computable {
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
         SqlLanguageSupport.isSql(psiFile?.language)
-    }
+    })
 
     private fun collectShorthandCandidateLines(event: DocumentEvent): Boolean {
         val document = editor.document

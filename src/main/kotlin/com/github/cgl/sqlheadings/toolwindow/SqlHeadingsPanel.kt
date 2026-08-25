@@ -11,7 +11,7 @@ import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
-import com.intellij.openapi.application.runReadActionBlocking
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -24,6 +24,7 @@ import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.Computable
 import com.intellij.util.Alarm
 import com.intellij.ui.ColoredTreeCellRenderer
 import com.intellij.ui.ScrollPaneFactory
@@ -226,10 +227,10 @@ internal class SqlHeadingsPanel(
         tree.emptyText.text = SqlHeadingsText.noHeadings
     }
 
-    private fun isSqlEditor(editor: Editor): Boolean = runReadActionBlocking {
+    private fun isSqlEditor(editor: Editor): Boolean = ApplicationManager.getApplication().runReadAction(Computable {
         val psiFile = com.intellij.psi.PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
         SqlLanguageSupport.isSql(psiFile?.language)
-    }
+    })
 
     private fun setTreeModel(
         headingItems: List<SqlHeading>,

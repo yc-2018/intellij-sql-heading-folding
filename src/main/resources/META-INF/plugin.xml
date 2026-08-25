@@ -10,18 +10,18 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>1.1.4</h3>
+        <h3>1.1.5</h3>
         <ul>
             <li>Optionally show colored comment nodes in the SQL outline and render them with their configured colors.</li>
             <li>Keep one trailing blank line visible when a folded section already ends with blank lines.</li>
-            <li>Move to JDK 21 and IntelliJ Platform 2026.2, replacing APIs deprecated by the current platform.</li>
+            <li>Move to JDK 21 with an IntelliJ Platform 2024.2 compatibility baseline while retaining support for newer releases.</li>
             <li>Place the colored-node checkbox at the end of the outline toolbar and preserve expanded tree nodes while editing.</li>
             <li>Add spacing and a tooltip to the colored-node checkbox.</li>
             <li>Remove Tool Window Factory API verifier warnings caused by generated Kotlin interface bridges.</li>
             <li>Clarify that the collapse and expand actions control SQL sections in the editor, not the outline tree.</li>
             <li>Add spacing around the active SQL file name at the top of the outline.</li>
         </ul>
-        <p>目录可选显示带实际配置颜色的注释节点，并在编辑时保持目录展开状态；折叠区块在原本存在尾部空行时保留一个空行；构建基线升级到 JDK 21 和 IntelliJ Platform 2026.2，并替换当前平台已弃用的 API。</p>
+        <p>目录可选显示带实际配置颜色的注释节点，并在编辑时保持目录展开状态；折叠区块在原本存在尾部空行时保留一个空行；构建基线调整为 JDK 21 和 IntelliJ Platform 2024.2，以支持 2024.2 及后续版本。</p>
     ]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>

@@ -11,7 +11,7 @@
 - Gradle 和编译使用 JDK 21。
 - 使用仓库中已提交的 Gradle Wrapper，不要求全局安装 Gradle。
 - JVM 字节码版本保持为 21。
-- 最低 IntelliJ Platform build 为 `262`（2026.2）。
+- 最低 IntelliJ Platform build 为 `242`（2024.2）。
 - 除非已验证的不兼容问题需要临时限制，否则不设置平台最高 build 限制。
 - 不要添加开发者机器的 JDK 路径或其他绝对本地路径。
 

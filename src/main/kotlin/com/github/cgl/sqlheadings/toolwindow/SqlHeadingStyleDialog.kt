@@ -5,12 +5,12 @@ import com.github.cgl.sqlheadings.editor.SqlHeadingStyleSettings
 import com.github.cgl.sqlheadings.model.SqlEmphasisMarkers
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
-import com.intellij.ui.ColorChooserService
 import com.intellij.icons.AllIcons
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
 import java.awt.Color
+import java.awt.Component
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.Graphics
@@ -94,8 +94,7 @@ internal class SqlHeadingStyleDialog(private val project: Project) : DialogWrapp
             toolTipText = "点击选择 $label 颜色"
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(event: MouseEvent) {
-                    val selected = ColorChooserService.getInstance()
-                        .showDialog(project, event.component, "选择 $label 颜色", colorFor(key), true)
+                    val selected = chooseColor(event.component, "选择 $label 颜色", colorFor(key))
                     if (selected != null) setColor(key, selected)
                 }
             })
@@ -114,6 +113,35 @@ internal class SqlHeadingStyleDialog(private val project: Project) : DialogWrapp
         is Int -> headingColors[key]
         is Char -> emphasisColors[key]
         else -> null
+    }
+
+    private fun chooseColor(component: Component, title: String, initialColor: Color?): Color? {
+        return runCatching {
+            val serviceClass = Class.forName("com.intellij.ui.ColorChooserService")
+            val service = serviceClass.getMethod("getInstance").invoke(null)
+            val method = serviceClass.getMethod(
+                "showDialog",
+                Project::class.java,
+                Component::class.java,
+                String::class.java,
+                Color::class.java,
+                Boolean::class.javaPrimitiveType,
+            )
+            method.invoke(service, project, component, title, initialColor, true) as? Color
+        }.getOrElse {
+            runCatching {
+                val chooserClass = Class.forName("com.intellij.ui.ColorChooser")
+                val method = chooserClass.getMethod(
+                    "chooseColor",
+                    Project::class.java,
+                    Component::class.java,
+                    String::class.java,
+                    Color::class.java,
+                    Boolean::class.javaPrimitiveType,
+                )
+                method.invoke(null, project, component, title, initialColor, true) as? Color
+            }.getOrNull()
+        }
     }
 
     private fun setColor(key: Any, color: Color?) {

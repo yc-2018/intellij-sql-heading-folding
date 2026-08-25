@@ -54,14 +54,14 @@ Section boundaries follow heading levels. An `H2` section ends at the next `H1` 
 
 | Product / 产品 | Supported versions / 支持版本 | Notes / 说明 |
 | --- | --- | --- |
-| IntelliJ IDEA Ultimate | 2026.2 and later / 2026.2 及后续版本 | Primary target; Database Tools is bundled / 重点测试产品，已内置 Database Tools |
-| DataGrip | 2026.2 and later / 2026.2 及后续版本 | Primary target; Database Tools is bundled / 重点测试产品，已内置数据库功能 |
-| Other JetBrains IDEs / 其他 JetBrains IDE | 2026.2 and later / 2026.2 及后续版本 | Supported whenever the product provides `com.intellij.database`; Marketplace exposes all eligible products automatically / 只要产品提供该依赖就支持，Marketplace 会自动覆盖全部符合条件的产品 |
+| IntelliJ IDEA Ultimate | 2024.2 and later / 2024.2 及后续版本 | Primary target; Database Tools is bundled / 重点测试产品，已内置 Database Tools |
+| DataGrip | 2024.2 and later / 2024.2 及后续版本 | Primary target; Database Tools is bundled / 重点测试产品，已内置数据库功能 |
+| Other JetBrains IDEs / 其他 JetBrains IDE | 2024.2 and later / 2024.2 及后续版本 | Supported whenever the product provides `com.intellij.database`; Marketplace exposes all eligible products automatically / 只要产品提供该依赖就支持，Marketplace 会自动覆盖全部符合条件的产品 |
 | Products without Database Tools / 不含数据库工具的产品 | Not available / 不可用 | The required `com.intellij.database` plugin is missing / 缺少必需依赖 |
 
-The plugin declares build `262` as its minimum and intentionally has no upper build limit. New IDE releases should still be tested before being marked as verified on JetBrains Marketplace.
+The plugin declares build `242` as its minimum and intentionally has no upper build limit. New IDE releases should still be tested before being marked as verified on JetBrains Marketplace.
 
-插件最低版本为 build `262`，不设置最高版本限制。新的 IDE 大版本仍应在 JetBrains Marketplace 标记为已验证前进行实际测试。
+插件最低版本为 build `242`，不设置最高版本限制。新的 IDE 大版本仍应在 JetBrains Marketplace 标记为已验证前进行实际测试。
 
 ## Installation / 安装
 
@@ -95,7 +95,7 @@ The plugin ZIP is generated under `build/distributions/`.
 
 - Kotlin 2.4 and JVM 21
 - IntelliJ Platform Gradle Plugin 2.x
-- Minimum platform build: `262`
+- Minimum platform build: `242`
 - Plugin ID: `com.github.cgl.sql-heading-folding`
 - Required runtime plugin: `com.intellij.database` (Marketplace uses this dependency to determine compatible JetBrains products)
 

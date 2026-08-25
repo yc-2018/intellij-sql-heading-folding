@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.github.cgl"
-version = "1.1.4"
+version = "1.1.5"
 
 repositories {
     mavenCentral()
@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdea("2026.2.1")
+        intellijIdea("2024.2")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
     }
 
@@ -40,7 +40,7 @@ intellijPlatform {
         name = "SQL Heading Folding / SQL 标题折叠"
 
         ideaVersion {
-            sinceBuild = "262"
+            sinceBuild = "242"
             untilBuild = provider { null }
         }
     }
