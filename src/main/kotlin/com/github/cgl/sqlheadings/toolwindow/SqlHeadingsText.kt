@@ -17,16 +17,16 @@ internal object SqlHeadingsText {
         get() = value("刷新 SQL 标题", "Refresh SQL headings")
 
     val collapseAll: String
-        get() = value("全部折叠", "Collapse All")
+        get() = value("折叠文件区块", "Collapse File Sections")
 
     val collapseAllDescription: String
-        get() = value("折叠所有 SQL 标题区块", "Collapse all SQL heading sections")
+        get() = value("折叠当前 SQL 文件中的所有标题区块（编辑器内容）", "Collapse all heading sections in the current SQL file")
 
     val expandAll: String
-        get() = value("全部展开", "Expand All")
+        get() = value("展开文件区块", "Expand File Sections")
 
     val expandAllDescription: String
-        get() = value("展开所有 SQL 标题区块", "Expand all SQL heading sections")
+        get() = value("展开当前 SQL 文件中的所有标题区块（编辑器内容）", "Expand all heading sections in the current SQL file")
 
     val untitledHeading: String
         get() = value("（未命名标题）", "(Untitled heading)")

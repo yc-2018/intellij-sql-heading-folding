@@ -41,6 +41,7 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.JTree
 import javax.swing.KeyStroke
+import javax.swing.BorderFactory
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreeNode
@@ -61,6 +62,7 @@ internal class SqlHeadingsPanel(
         setToolbar(createToolbar())
 
         val body = JPanel(BorderLayout())
+        fileLabel.border = BorderFactory.createEmptyBorder(0, 6, 0, 6)
         body.add(fileLabel, BorderLayout.NORTH)
         body.add(ScrollPaneFactory.createScrollPane(tree, true), BorderLayout.CENTER)
         setContent(body)
