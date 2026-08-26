@@ -327,7 +327,7 @@ internal class SqlHeadingsPanel(
             val editor = currentSqlEditor() ?: return
             val currentFile = FileDocumentManager.getInstance().getFile(editor.document)
             val suggestedName = defaultExportName(editor, currentFile)
-            val descriptor = FileSaverDescriptor(
+            val descriptor = createFileSaverDescriptor(
                 SqlHeadingsText.exportLocal,
                 SqlHeadingsText.value("选择保存 SQL 文件的位置", "Choose where to save the SQL file"),
             )
@@ -436,6 +436,19 @@ internal class SqlHeadingsPanel(
             ?: SqlHeadingsText.value("未命名数据源", "Unnamed data source")
         val sqlName = file?.nameWithoutExtension?.takeIf { it.isNotBlank() } ?: "sql"
         return "${sanitizeFileName(dataSourceName)}-${sanitizeFileName(sqlName)}.sql"
+    }
+
+    private fun createFileSaverDescriptor(title: String, description: String): FileSaverDescriptor {
+        val descriptorClass = FileSaverDescriptor::class.java
+        return runCatching {
+            descriptorClass
+                .getConstructor(String::class.java, String::class.java)
+                .newInstance(title, description)
+        }.getOrElse {
+            descriptorClass
+                .getConstructor(String::class.java, String::class.java, Array<String>::class.java)
+                .newInstance(title, description, emptyArray<String>())
+        }
     }
 
     private fun sanitizeFileName(value: String): String = value
