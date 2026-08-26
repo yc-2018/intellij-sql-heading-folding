@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.github.cgl"
-version = "1.1.5"
+version = "1.1.6"
 
 repositories {
     mavenCentral()
@@ -20,6 +20,7 @@ repositories {
 dependencies {
     intellijPlatform {
         intellijIdea("2024.2")
+        bundledPlugin("com.intellij.database")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
     }
 

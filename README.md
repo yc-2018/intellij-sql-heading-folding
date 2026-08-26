@@ -21,6 +21,7 @@ Hierarchical headings, native folding, reading-mode labels, and outline navigati
 - Keep one trailing blank line visible when a folded section already ends with blank lines. / 标题区块末尾原本存在空行时，折叠后保留一个可见空行。
 - Navigate all headings from the **SQL Headings** tool window. / 在 **SQL Headings** 工具窗口中浏览并跳转全部标题。
 - Refresh, collapse all sections, or expand all sections from the tool window toolbar. / 支持刷新、全部折叠和全部展开。
+- Import SQL from a local `.sql` file or another open console of the same database type, and export the current SQL to a local file or another compatible console. Transfers copy editor text only and never execute SQL. / 可从本地 `.sql` 文件或另一个已打开的同类型数据库控制台导入 SQL，也可导出到本地或其他兼容控制台；整个过程只复制编辑器文本，绝不会执行 SQL。
 
 ## Usage / 使用方法
 

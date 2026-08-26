@@ -6,12 +6,15 @@ import com.github.cgl.sqlheadings.model.SqlEmphasisComment
 import com.github.cgl.sqlheadings.model.SqlHeading
 import com.github.cgl.sqlheadings.model.SqlHeadingParser
 import com.intellij.icons.AllIcons
+import com.intellij.database.console.JdbcConsole
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -22,9 +25,16 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
+import com.intellij.openapi.fileChooser.FileChooser
+import com.intellij.openapi.fileChooser.FileChooserDescriptor
+import com.intellij.openapi.fileChooser.FileChooserFactory
+import com.intellij.openapi.fileChooser.FileSaverDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Computable
+import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.Alarm
 import com.intellij.ui.ColoredTreeCellRenderer
 import com.intellij.ui.ScrollPaneFactory
@@ -43,6 +53,8 @@ import javax.swing.JPanel
 import javax.swing.JTree
 import javax.swing.KeyStroke
 import javax.swing.BorderFactory
+import java.awt.Component
+import java.util.Locale
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreeNode
@@ -166,6 +178,19 @@ internal class SqlHeadingsPanel(
             ) {
                 override fun actionPerformed(event: AnActionEvent) = setAllSectionsExpanded(true)
             },
+            Separator.getInstance(),
+            DefaultActionGroup(
+                SqlHeadingsText.transfer,
+                SqlHeadingsText.transfer,
+                AllIcons.Actions.Upload,
+            ).apply {
+                isPopup = true
+                add(importLocalAction())
+                add(importConsoleAction())
+                add(Separator.getInstance())
+                add(exportLocalAction())
+                add(exportConsoleAction())
+            },
             object : AnAction("帮助", "查看功能使用说明", AllIcons.Actions.Help) {
                 override fun actionPerformed(event: AnActionEvent) {
                     SqlHeadingHelpDialog(project).show()
@@ -262,6 +287,172 @@ internal class SqlHeadingsPanel(
         } else {
             expandAllTreeRows()
         }
+    }
+
+    private fun importLocalAction() = object : AnAction(
+        SqlHeadingsText.importLocal,
+        SqlHeadingsText.importLocalDescription,
+        AllIcons.Actions.Download,
+    ) {
+        override fun actionPerformed(event: AnActionEvent) {
+            val editor = currentSqlEditor() ?: return
+            val descriptor = FileChooserDescriptor(true, false, false, false, false, false)
+                .withTitle(SqlHeadingsText.importLocal)
+                .withDescription(SqlHeadingsText.value("选择要插入当前 SQL 编辑器的 .sql 文件", "Select a .sql file to insert into the current editor"))
+                .withFileFilter { file -> !file.isDirectory && file.extension?.lowercase(Locale.ROOT) == "sql" }
+            val file = FileChooser.chooseFile(descriptor, eventInputComponent(event), project, null) ?: return
+            runCatching { VfsUtil.loadText(file) }
+                .onSuccess { insertAtCaret(editor, it, SqlHeadingsText.importLocal) }
+                .onFailure { showTransferError(SqlHeadingsText.value("读取 SQL 文件失败", "Failed to read the SQL file"), it) }
+        }
+    }
+
+    private fun importConsoleAction() = object : AnAction(
+        SqlHeadingsText.importConsole,
+        SqlHeadingsText.importConsoleDescription,
+        AllIcons.Actions.Download,
+    ) {
+        override fun actionPerformed(event: AnActionEvent) {
+            val targetEditor = currentSqlEditor() ?: return
+            val source = chooseOtherConsole(targetEditor, selectingSource = true) ?: return
+            insertAtCaret(targetEditor, source.document.text, SqlHeadingsText.importConsole)
+        }
+    }
+
+    private fun exportLocalAction() = object : AnAction(
+        SqlHeadingsText.exportLocal,
+        SqlHeadingsText.exportLocalDescription,
+        AllIcons.Actions.Upload,
+    ) {
+        override fun actionPerformed(event: AnActionEvent) {
+            val editor = currentSqlEditor() ?: return
+            val currentFile = FileDocumentManager.getInstance().getFile(editor.document)
+            val suggestedName = defaultExportName(editor, currentFile)
+            val descriptor = FileSaverDescriptor(
+                SqlHeadingsText.exportLocal,
+                SqlHeadingsText.value("选择保存 SQL 文件的位置", "Choose where to save the SQL file"),
+                "sql",
+            )
+            val wrapper = FileChooserFactory.getInstance()
+                .createSaveFileDialog(descriptor, project)
+                .save(null as VirtualFile?, suggestedName) ?: return
+            val savedFile = wrapper.getVirtualFile(true) ?: return
+            runCatching {
+                ApplicationManager.getApplication().runWriteAction {
+                    VfsUtil.saveText(savedFile, editor.document.text)
+                }
+            }
+                .onFailure { showTransferError(SqlHeadingsText.value("保存 SQL 文件失败", "Failed to save the SQL file"), it) }
+        }
+    }
+
+    private fun exportConsoleAction() = object : AnAction(
+        SqlHeadingsText.exportConsole,
+        SqlHeadingsText.exportConsoleDescription,
+        AllIcons.Actions.Upload,
+    ) {
+        override fun actionPerformed(event: AnActionEvent) {
+            val sourceEditor = currentSqlEditor() ?: return
+            val target = chooseOtherConsole(sourceEditor, selectingSource = false) ?: return
+            val separator = if (target.document.text.isBlank() || target.document.text.endsWith("\n")) "" else "\n\n"
+            WriteCommandAction.runWriteCommandAction(project, SqlHeadingsText.exportConsole, null, Runnable {
+                target.document.insertString(target.document.textLength, separator + sourceEditor.document.text)
+            })
+            FileEditorManager.getInstance(project).openFile(target.virtualFile, true)
+        }
+    }
+
+    private fun currentSqlEditor(): Editor? {
+        val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return null
+        if (!isSqlEditor(editor)) {
+            Messages.showWarningDialog(project, SqlHeadingsText.noSqlEditor, SqlHeadingsText.toolWindowTitle)
+            return null
+        }
+        return editor
+    }
+
+    private fun chooseOtherConsole(editor: Editor, selectingSource: Boolean): JdbcConsole? {
+        val currentConsole = JdbcConsole.getActiveConsoles(project)
+            .firstOrNull { it.document === editor.document }
+        val currentDbms = currentConsole?.dataSource?.dbms
+        val candidates = JdbcConsole.getActiveConsoles(project)
+            .filter { it.document !== editor.document }
+            .filter { console -> currentDbms == null || console.dataSource.dbms == currentDbms }
+            .distinctBy { it.document }
+        if (candidates.isEmpty()) {
+            val message = if (currentDbms == null) {
+                SqlHeadingsText.value(
+                    "没有找到其他已打开的 SQL 控制台。请先打开目标数据源的 SQL 控制台。",
+                    "No other open SQL console was found. Open a SQL console for the source or target data source first.",
+                )
+            } else {
+                SqlHeadingsText.value(
+                    "没有找到其他同数据库类型的已打开 SQL 控制台。请先打开目标数据源的 SQL 控制台。",
+                    "No other open SQL console of the same database type was found. Open the target console first.",
+                )
+            }
+            Messages.showInfoMessage(project, message, SqlHeadingsText.transfer)
+            return null
+        }
+        val labels = candidates.map { console ->
+            val sourceName = console.dataSource.name.takeIf { it.isNotBlank() }
+                ?: SqlHeadingsText.value("未命名数据源", "Unnamed data source")
+            "$sourceName — ${console.title}"
+        }
+        val chooser = SqlConsoleChooserDialog(
+            project,
+            if (selectingSource) {
+                SqlHeadingsText.value("选择导入来源", "Choose Import Source")
+            } else {
+                SqlHeadingsText.value("选择导出目标", "Choose Export Target")
+            },
+            if (selectingSource) {
+                SqlHeadingsText.value(
+                    "选择要从中读取 SQL 的控制台（只复制文本，不会执行 SQL）",
+                    "Choose the console to read from. SQL will be copied but never executed.",
+                )
+            } else {
+                SqlHeadingsText.value(
+                    "选择要写入 SQL 的控制台（只复制文本，不会执行 SQL）",
+                    "Choose the console to write to. SQL will be copied but never executed.",
+                )
+            },
+            labels,
+        )
+        if (!chooser.showAndGet()) return null
+        return candidates.getOrNull(chooser.selectedIndex)
+    }
+
+    private fun insertAtCaret(editor: Editor, text: String, commandName: String) {
+        if (text.isEmpty()) return
+        val caretOffset = editor.caretModel.offset.coerceIn(0, editor.document.textLength)
+        val prefix = if (caretOffset > 0 && editor.document.text[caretOffset - 1] != '\n') "\n\n" else ""
+        WriteCommandAction.runWriteCommandAction(project, commandName, null, Runnable {
+            editor.document.insertString(caretOffset, prefix + text)
+        })
+    }
+
+    private fun defaultExportName(editor: Editor, file: VirtualFile?): String {
+        val console = JdbcConsole.getActiveConsoles(project).firstOrNull { it.document === editor.document }
+        val dataSourceName = console?.dataSource?.name?.takeIf { it.isNotBlank() }
+            ?: SqlHeadingsText.value("未命名数据源", "Unnamed data source")
+        val sqlName = file?.nameWithoutExtension?.takeIf { it.isNotBlank() } ?: "sql"
+        return "${sanitizeFileName(dataSourceName)}-${sanitizeFileName(sqlName)}.sql"
+    }
+
+    private fun sanitizeFileName(value: String): String = value
+        .replace(Regex("[\\\\/:*?\"<>|]"), "_")
+        .trim()
+        .ifBlank { "sql" }
+
+    private fun eventInputComponent(event: AnActionEvent): Component? = event.inputEvent?.component
+
+    private fun showTransferError(message: String, error: Throwable) {
+        Messages.showErrorDialog(
+            project,
+            "$message: ${error.message.orEmpty()}",
+            SqlHeadingsText.value("导入/导出失败", "Import / Export Failed"),
+        )
     }
 
     private fun captureExpandedIndexPaths(): Set<List<Int>> {

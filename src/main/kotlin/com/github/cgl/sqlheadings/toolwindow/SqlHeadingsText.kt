@@ -42,4 +42,31 @@ internal object SqlHeadingsText {
 
     val coloredNodesDescription: String
         get() = value("将带颜色的注释显示在侧边栏目录中", "Show colored comments in the outline")
+
+    val transfer: String
+        get() = value("导入/导出", "Import / Export")
+
+    val importLocal: String
+        get() = value("导入本地 SQL", "Import SQL from Local File")
+
+    val importLocalDescription: String
+        get() = value("将本地 SQL 文件插入当前光标位置", "Insert a local SQL file at the current caret")
+
+    val importConsole: String
+        get() = value("从其他数据源导入", "Import from Another Data Source")
+
+    val importConsoleDescription: String
+        get() = value("从其他已打开的同类型 SQL 控制台插入文本", "Insert text from another open SQL console of the same database type")
+
+    val exportLocal: String
+        get() = value("导出到本地", "Export to Local File")
+
+    val exportLocalDescription: String
+        get() = value("将当前 SQL 保存为本地文件", "Save the current SQL to a local file")
+
+    val exportConsole: String
+        get() = value("导出到其他数据源", "Export to Another Data Source")
+
+    val exportConsoleDescription: String
+        get() = value("将当前 SQL 复制到其他已打开的同类型 SQL 控制台", "Copy the current SQL to another open SQL console of the same database type")
 }
