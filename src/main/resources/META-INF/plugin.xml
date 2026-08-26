@@ -10,7 +10,7 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>1.1.6</h3>
+        <h3>1.1.7</h3>
         <ul>
             <li>Optionally show colored comment nodes in the SQL outline and render them with their configured colors.</li>
             <li>Keep one trailing blank line visible when a folded section already ends with blank lines.</li>
@@ -19,6 +19,7 @@
             <li>Add spacing and a tooltip to the colored-node checkbox.</li>
             <li>Remove Tool Window Factory API verifier warnings caused by generated Kotlin interface bridges.</li>
             <li>Add text-only SQL import/export actions for local files and other open consoles of the same database type.</li>
+            <li>Use the current non-deprecated file saver descriptor API.</li>
             <li>Clarify that the collapse and expand actions control SQL sections in the editor, not the outline tree.</li>
             <li>Add spacing around the active SQL file name at the top of the outline.</li>
         </ul>

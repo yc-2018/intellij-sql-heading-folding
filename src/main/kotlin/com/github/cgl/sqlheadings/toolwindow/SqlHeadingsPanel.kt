@@ -53,7 +53,6 @@ import javax.swing.JPanel
 import javax.swing.JTree
 import javax.swing.KeyStroke
 import javax.swing.BorderFactory
-import java.awt.Component
 import java.util.Locale
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
@@ -300,7 +299,7 @@ internal class SqlHeadingsPanel(
                 .withTitle(SqlHeadingsText.importLocal)
                 .withDescription(SqlHeadingsText.value("选择要插入当前 SQL 编辑器的 .sql 文件", "Select a .sql file to insert into the current editor"))
                 .withFileFilter { file -> !file.isDirectory && file.extension?.lowercase(Locale.ROOT) == "sql" }
-            val file = FileChooser.chooseFile(descriptor, eventInputComponent(event), project, null) ?: return
+            val file = FileChooser.chooseFile(descriptor, project, null) ?: return
             runCatching { VfsUtil.loadText(file) }
                 .onSuccess { insertAtCaret(editor, it, SqlHeadingsText.importLocal) }
                 .onFailure { showTransferError(SqlHeadingsText.value("读取 SQL 文件失败", "Failed to read the SQL file"), it) }
@@ -331,7 +330,6 @@ internal class SqlHeadingsPanel(
             val descriptor = FileSaverDescriptor(
                 SqlHeadingsText.exportLocal,
                 SqlHeadingsText.value("选择保存 SQL 文件的位置", "Choose where to save the SQL file"),
-                "sql",
             )
             val wrapper = FileChooserFactory.getInstance()
                 .createSaveFileDialog(descriptor, project)
@@ -444,8 +442,6 @@ internal class SqlHeadingsPanel(
         .replace(Regex("[\\\\/:*?\"<>|]"), "_")
         .trim()
         .ifBlank { "sql" }
-
-    private fun eventInputComponent(event: AnActionEvent): Component? = event.inputEvent?.component
 
     private fun showTransferError(message: String, error: Throwable) {
         Messages.showErrorDialog(
