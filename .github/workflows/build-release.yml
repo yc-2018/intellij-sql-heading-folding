@@ -36,6 +36,12 @@ jobs:
       - name: 设置 Gradle Wrapper 可执行权限
         run: chmod +x gradlew
 
+      - name: 注入中文插件名用于发布
+        run: |
+          sed -i 's|<name>SQL Heading Folding</name>|<name>SQL Heading Folding / SQL 标题折叠</name>|' \
+            src/main/resources/META-INF/plugin.xml
+          echo "插件名已更新为带中文版本"
+
       - name: 测试并构建插件
         run: ./gradlew test buildPlugin --stacktrace
 
