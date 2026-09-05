@@ -38,8 +38,6 @@ tasks.withType<KotlinCompile>().configureEach {
 
 intellijPlatform {
     pluginConfiguration {
-        name = "SQL Heading Folding / SQL 标题折叠"
-
         ideaVersion {
             sinceBuild = "242"
             untilBuild = provider { null }
